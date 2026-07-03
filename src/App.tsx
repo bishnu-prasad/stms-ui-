@@ -5,7 +5,23 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Layout } from "@/components/Layout";
 import { OwnerLayout } from "@/owner/layout/OwnerLayout";
+import { SuperAdminLayout } from "@/super-admin/layout/SuperAdminLayout";
+import { VendorLayout } from "@/vendor/layout/VendorLayout";
+import { EngineerLayout } from "@/engineer/layout/EngineerLayout";
 import NotFound from "@/pages/not-found";
+
+// Engineer Portal Pages
+import EngineerDashboard from "@/engineer/pages/Dashboard";
+import JobsList from "@/engineer/pages/Jobs/JobsList";
+import TicketDetails from "@/engineer/pages/Jobs/TicketDetails";
+import WorkExecution from "@/engineer/pages/Jobs/WorkExecution";
+import MySites from "@/engineer/pages/Sites/MySites";
+import Inventory from "@/engineer/pages/Inventory";
+import EngineerNotifications from "@/engineer/pages/Notifications";
+import EngineerReports from "@/engineer/pages/Reports";
+import Profile from "@/engineer/pages/Profile";
+import Settings from "@/engineer/pages/Settings";
+import Support from "@/engineer/pages/Support";
 
 // Customer Portal Pages
 import Analytics from "@/pages/Analytics";
@@ -33,31 +49,49 @@ import OwnerSystem from "@/owner/pages/System";
 import OwnerSettings from "@/owner/pages/Settings";
 
 // Super Admin Portal Pages & Layout
-import { SuperAdminLayout } from "@/super-admin/layout/SuperAdminLayout";
 import DashboardPage from "@/super-admin/pages/Enterprise/Dashboard";
-import CustomersPage from "@/super-admin/pages/Enterprise/Customers";
-import CustomerHealthPage from "@/super-admin/pages/Enterprise/CustomerHealth";
-import SubscriptionsPage from "@/super-admin/pages/Enterprise/Subscriptions";
-import PlatformUsersPage from "@/super-admin/pages/Enterprise/PlatformUsers";
-import RolesPage from "@/super-admin/pages/Enterprise/Roles";
-import PermissionsPage from "@/super-admin/pages/Enterprise/Permissions";
-import PlatformHealthPage from "@/super-admin/pages/Enterprise/PlatformHealth";
-import ServersPage from "@/super-admin/pages/Enterprise/Servers";
-import DatabasePage from "@/super-admin/pages/Enterprise/Database";
-import StoragePage from "@/super-admin/pages/Enterprise/Storage";
-import BackupPage from "@/super-admin/pages/Enterprise/Backup";
-import ApiGatewayPage from "@/super-admin/pages/Enterprise/ApiGateway";
-import VendorsPage from "@/super-admin/pages/Enterprise/Vendors";
-import VendorSLAPage from "@/super-admin/pages/Enterprise/VendorSLA";
-import InventoryPage from "@/super-admin/pages/Enterprise/Inventory";
-import AlertsPage from "@/super-admin/pages/Enterprise/Alerts";
-import AuditLogsPage from "@/super-admin/pages/Enterprise/AuditLogs";
-import ReportsPage from "@/super-admin/pages/Enterprise/Reports";
-import SettingsPage from "@/super-admin/pages/Enterprise/Settings";
+import CustomersDirPage from "@/super-admin/pages/Customers/index";
+import CustomerHealthPage from "@/super-admin/pages/Customers/Health";
+import CustomerSitesPage from "@/super-admin/pages/Customers/Sites";
+import CustomerSLAPage from "@/super-admin/pages/Customers/SLA";
+import AllSitesPage from "@/super-admin/pages/Sites/index";
+import SiteHealthPage from "@/super-admin/pages/Sites/Health";
+import CriticalSitesPage from "@/super-admin/pages/Sites/Critical";
+import LiveAlarmsPage from "@/super-admin/pages/Alarms/Live";
+import AlarmHistoryPage from "@/super-admin/pages/Alarms/History";
+import AlarmAnalyticsPage from "@/super-admin/pages/Alarms/Analytics";
+import GatewayStatusPage from "@/super-admin/pages/Gateways/index";
+import CommHealthPage from "@/super-admin/pages/Gateways/Communication";
+import FirmwarePage from "@/super-admin/pages/Gateways/Firmware";
+import GatewayConfigPage from "@/super-admin/pages/Gateways/Configuration";
+import ConfigProfilesPage from "@/super-admin/pages/Configuration/Profiles";
+import BulkPushPage from "@/super-admin/pages/Configuration/BulkPush";
+import OTAUpdatesPage from "@/super-admin/pages/Configuration/OTA";
+import ConfigHistoryPage from "@/super-admin/pages/Configuration/History";
+import TicketsPage from "@/super-admin/pages/Operations/Tickets";
+import VendorsPage from "@/super-admin/pages/Operations/Vendors";
+import EscalationsPage from "@/super-admin/pages/Operations/Escalations";
+import NetworkHealthPage from "@/super-admin/pages/Analytics/Network";
+import AvailabilityPage from "@/super-admin/pages/Analytics/Availability";
+import PowerAnalyticsPage from "@/super-admin/pages/Analytics/Power";
+import VendorAnalyticsPage from "@/super-admin/pages/Analytics/VendorAnalytics";
+import OpReportsPage from "@/super-admin/pages/Reports/Operational";
+import AlarmReportsPage from "@/super-admin/pages/Reports/Alarms";
+import CustomerReportsPage from "@/super-admin/pages/Reports/Customers";
+import SLAReportsPage from "@/super-admin/pages/Reports/SLA";
+import AdminUsersPage from "@/super-admin/pages/Users/index";
+import CustAccountsPage from "@/super-admin/pages/Users/CustomerAccounts";
+import VendorAccountsPage from "@/super-admin/pages/Users/VendorAccounts";
+import RolesPage from "@/super-admin/pages/Users/Roles";
+import ActivityLogsPage from "@/super-admin/pages/Audit/Activity";
+import LoginsPage from "@/super-admin/pages/Audit/Logins";
+import ConfigAuditPage from "@/super-admin/pages/Audit/Config";
+import SystemSettingsPage from "@/super-admin/pages/Settings/index";
+import NotificationsPage from "@/super-admin/pages/Settings/Notifications";
+import IntegrationsPage from "@/super-admin/pages/Settings/Integrations";
 import SuperAdminLogin from "@/super-admin/pages/Login";
 
 // Vendor Portal Layout & Pages
-import { VendorLayout } from "@/vendor/layout/VendorLayout";
 import VendorDashboardPage from "@/vendor/pages/Dashboard";
 import VendorJobsPage from "@/vendor/pages/Jobs";
 import VendorAssignedSitesPage from "@/vendor/pages/AssignedSites";
@@ -129,66 +163,57 @@ function AppRouter() {
       </Route>
 
       {/* ── Super Admin Portal ───────────────────────────── */}
-      <Route path="/super-admin/dashboard">
-        <SuperAdminLayout><DashboardPage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/customers">
-        <SuperAdminLayout><CustomersPage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/customer-health">
-        <SuperAdminLayout><CustomerHealthPage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/subscriptions">
-        <SuperAdminLayout><SubscriptionsPage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/users">
-        <SuperAdminLayout><PlatformUsersPage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/roles">
-        <SuperAdminLayout><RolesPage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/permissions">
-        <SuperAdminLayout><PermissionsPage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/infrastructure/health">
-        <SuperAdminLayout><PlatformHealthPage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/infrastructure/servers">
-        <SuperAdminLayout><ServersPage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/infrastructure/database">
-        <SuperAdminLayout><DatabasePage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/infrastructure/storage">
-        <SuperAdminLayout><StoragePage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/infrastructure/backup">
-        <SuperAdminLayout><BackupPage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/infrastructure/gateway">
-        <SuperAdminLayout><ApiGatewayPage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/vendors">
-        <SuperAdminLayout><VendorsPage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/vendor-sla">
-        <SuperAdminLayout><VendorSLAPage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/inventory">
-        <SuperAdminLayout><InventoryPage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/monitoring/alerts">
-        <SuperAdminLayout><AlertsPage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/monitoring/audit-logs">
-        <SuperAdminLayout><AuditLogsPage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/reports">
-        <SuperAdminLayout><ReportsPage /></SuperAdminLayout>
-      </Route>
-      <Route path="/super-admin/settings">
-        <SuperAdminLayout><SettingsPage /></SuperAdminLayout>
-      </Route>
+      <Route path="/super-admin/dashboard"><SuperAdminLayout><DashboardPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/customers"><SuperAdminLayout><CustomersDirPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/customers/health"><SuperAdminLayout><CustomerHealthPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/customers/sites"><SuperAdminLayout><CustomerSitesPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/customers/sla"><SuperAdminLayout><CustomerSLAPage /></SuperAdminLayout></Route>
+      
+      <Route path="/super-admin/sites"><SuperAdminLayout><AllSitesPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/sites/health"><SuperAdminLayout><SiteHealthPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/sites/critical"><SuperAdminLayout><CriticalSitesPage /></SuperAdminLayout></Route>
+      
+      <Route path="/super-admin/alarms/live"><SuperAdminLayout><LiveAlarmsPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/alarms/history"><SuperAdminLayout><AlarmHistoryPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/alarms/analytics"><SuperAdminLayout><AlarmAnalyticsPage /></SuperAdminLayout></Route>
+      
+      <Route path="/super-admin/gateways"><SuperAdminLayout><GatewayStatusPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/gateways/communication"><SuperAdminLayout><CommHealthPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/gateways/firmware"><SuperAdminLayout><FirmwarePage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/gateways/configuration"><SuperAdminLayout><GatewayConfigPage /></SuperAdminLayout></Route>
+
+      <Route path="/super-admin/config/profiles"><SuperAdminLayout><ConfigProfilesPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/config/push"><SuperAdminLayout><BulkPushPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/config/ota"><SuperAdminLayout><OTAUpdatesPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/config/history"><SuperAdminLayout><ConfigHistoryPage /></SuperAdminLayout></Route>
+
+      <Route path="/super-admin/operations/tickets"><SuperAdminLayout><TicketsPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/operations/vendors"><SuperAdminLayout><VendorsPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/operations/escalations"><SuperAdminLayout><EscalationsPage /></SuperAdminLayout></Route>
+
+      <Route path="/super-admin/analytics/network"><SuperAdminLayout><NetworkHealthPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/analytics/availability"><SuperAdminLayout><AvailabilityPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/analytics/power"><SuperAdminLayout><PowerAnalyticsPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/analytics/vendors"><SuperAdminLayout><VendorAnalyticsPage /></SuperAdminLayout></Route>
+
+      <Route path="/super-admin/reports/operational"><SuperAdminLayout><OpReportsPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/reports/alarms"><SuperAdminLayout><AlarmReportsPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/reports/customers"><SuperAdminLayout><CustomerReportsPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/reports/sla"><SuperAdminLayout><SLAReportsPage /></SuperAdminLayout></Route>
+
+      <Route path="/super-admin/users"><SuperAdminLayout><AdminUsersPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/users/customers"><SuperAdminLayout><CustAccountsPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/users/vendors"><SuperAdminLayout><VendorAccountsPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/users/roles"><SuperAdminLayout><RolesPage /></SuperAdminLayout></Route>
+
+      <Route path="/super-admin/audit/activity"><SuperAdminLayout><ActivityLogsPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/audit/logins"><SuperAdminLayout><LoginsPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/audit/config"><SuperAdminLayout><ConfigAuditPage /></SuperAdminLayout></Route>
+
+      <Route path="/super-admin/settings"><SuperAdminLayout><SystemSettingsPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/settings/notifications"><SuperAdminLayout><NotificationsPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/settings/integrations"><SuperAdminLayout><IntegrationsPage /></SuperAdminLayout></Route>
+
       <Route path="/super-admin">
         <SuperAdminLayout><DashboardPage /></SuperAdminLayout>
       </Route>
@@ -238,6 +263,53 @@ function AppRouter() {
       </Route>
       <Route path="/owner">
         <OwnerLayout><OwnerOverview /></OwnerLayout>
+      </Route>
+
+      {/* ── Engineer Portal ──────────────────────────────── */}
+      <Route path="/engineer/dashboard">
+        <EngineerLayout><EngineerDashboard /></EngineerLayout>
+      </Route>
+      <Route path="/engineer/jobs/ticket/:id">
+        <EngineerLayout><TicketDetails /></EngineerLayout>
+      </Route>
+      <Route path="/engineer/jobs/execute/:id">
+        <EngineerLayout><WorkExecution /></EngineerLayout>
+      </Route>
+      <Route path="/engineer/jobs/:status">
+        <EngineerLayout><JobsList /></EngineerLayout>
+      </Route>
+      <Route path="/engineer/sites">
+        <EngineerLayout><MySites /></EngineerLayout>
+      </Route>
+      <Route path="/engineer/sites/:id">
+        <EngineerLayout><MySites /></EngineerLayout>
+      </Route>
+      <Route path="/engineer/tickets">
+        <EngineerLayout><JobsList /></EngineerLayout>
+      </Route>
+      <Route path="/engineer/maintenance/:type">
+        <EngineerLayout><JobsList /></EngineerLayout>
+      </Route>
+      <Route path="/engineer/inventory">
+        <EngineerLayout><Inventory /></EngineerLayout>
+      </Route>
+      <Route path="/engineer/notifications">
+        <EngineerLayout><EngineerNotifications /></EngineerLayout>
+      </Route>
+      <Route path="/engineer/reports">
+        <EngineerLayout><EngineerReports /></EngineerLayout>
+      </Route>
+      <Route path="/engineer/profile">
+        <EngineerLayout><Profile /></EngineerLayout>
+      </Route>
+      <Route path="/engineer/settings">
+        <EngineerLayout><Settings /></EngineerLayout>
+      </Route>
+      <Route path="/engineer/support">
+        <EngineerLayout><Support /></EngineerLayout>
+      </Route>
+      <Route path="/engineer">
+        <EngineerLayout><EngineerDashboard /></EngineerLayout>
       </Route>
 
       {/* ── Customer Portal ──────────────────────────────── */}

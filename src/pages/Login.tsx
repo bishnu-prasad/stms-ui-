@@ -5,7 +5,7 @@ import { Mail, Lock, Eye, EyeOff, Activity, Bell, BarChart3, Check, Building2, S
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-type AccountType = "admin" | "superadmin" | "vendor" | "customer" | null;
+type AccountType = "admin" | "superadmin" | "vendor" | "customer" | "engineer" | null;
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -24,6 +24,8 @@ export default function Login() {
         setLocation("/vendor/dashboard");
       } else if (accountType === "superadmin") {
         setLocation("/super-admin/dashboard");
+      } else if (accountType === "engineer") {
+        setLocation("/engineer/dashboard");
       } else if (accountType === "admin") {
         setLocation("/owner/overview");
       } else {
@@ -291,6 +293,33 @@ export default function Login() {
                     </div>
                     <div className="text-xs text-slate-500 font-medium leading-relaxed">
                       Manage maintenance dispatches, tracking & parts logs
+                    </div>
+                  </div>
+                </motion.button>
+
+                {/* 5. Field Engineer Card */}
+                <motion.button
+                  whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(234,88,12,0.06)", borderColor: "#ea580c" }}
+                  whileTap={{ scale: 0.995 }}
+                  onClick={() => { setAccountType("engineer"); setEmail("technician@field-ops.com"); }}
+                  className="w-full text-left p-4 rounded-xl cursor-pointer transition-all bg-white border border-slate-200/80 shadow-2xs flex gap-4 items-start hover:border-orange-300"
+                >
+                  <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center shrink-0">
+                    <svg viewBox="0 0 24 24" className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 18v-2a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v2" />
+                      <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" />
+                      <path d="M12 2v2" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="font-bold text-slate-900 text-sm tracking-tight">Field Ops Portal</span>
+                      <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200 tracking-wider shrink-0">
+                        ENGINEER
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-500 font-medium leading-relaxed">
+                      Accept jobs, GPS check-in, checklists & site maintenance
                     </div>
                   </div>
                 </motion.button>
