@@ -5,7 +5,7 @@ import { Mail, Lock, Eye, EyeOff, Activity, Bell, BarChart3, ArrowRight, Check }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-type AccountType = "admin" | "customer" | null;
+type AccountType = "admin" | "superadmin" | "vendor" | "customer" | null;
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -20,7 +20,11 @@ export default function Login() {
     e.preventDefault();
     setIsLoading(true);
     setTimeout(() => {
-      if (accountType === "admin") {
+      if (accountType === "vendor") {
+        setLocation("/vendor/dashboard");
+      } else if (accountType === "superadmin") {
+        setLocation("/super-admin/dashboard");
+      } else if (accountType === "admin") {
         setLocation("/owner/overview");
       } else {
         setLocation("/analytics");
@@ -143,24 +147,61 @@ export default function Login() {
                   whileHover={{ scale: 1.015, boxShadow: "0 8px 24px rgba(99,102,241,0.12)" }}
                   whileTap={{ scale: 0.99 }}
                   onClick={() => { setAccountType("admin"); setEmail("admin@indionetworks.com"); }}
-                  className="w-full text-left p-5 rounded-2xl cursor-pointer transition-all"
+                  className="w-full text-left p-4 rounded-2xl cursor-pointer transition-all"
                   style={{ background: "#fff", border: "2px solid #E0E7FF", boxShadow: "0 2px 8px rgba(99,102,241,0.06)" }}
                 >
-                  <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start justify-between mb-2">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: "rgba(99,102,241,0.08)" }}>
                       🏢
                     </div>
-                    <span className="text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: "rgba(99,102,241,0.1)", color: "#6366F1" }}>ENTERPRISE</span>
+                    <span className="text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: "rgba(99,102,241,0.1)", color: "#6366F1" }}>PLATFORM OWNER</span>
                   </div>
                   <div className="font-bold text-slate-900 text-sm mb-1">Platform Administration</div>
-                  <div className="text-xs text-slate-400 leading-relaxed space-y-0.5">
-                    <div>• Manage all customers & subscriptions</div>
-                    <div>• Billing, invoices & revenue analytics</div>
-                    <div>• Vendor management & firmware</div>
-                    <div>• Entire STMS platform control</div>
+                  <div className="text-[11px] text-slate-400 leading-relaxed space-y-0.5">
+                    <div>• Manage customers & revenue</div>
+                    <div>• Billing & vendor management</div>
                   </div>
-                  <div className="flex items-center gap-1.5 mt-3 text-xs font-semibold" style={{ color: "#6366F1" }}>
-                    Sign in as Platform Admin <ArrowRight className="w-3.5 h-3.5" />
+                </motion.button>
+
+                {/* Super Admin Card */}
+                <motion.button
+                  whileHover={{ scale: 1.015, boxShadow: "0 8px 24px rgba(15,23,42,0.12)" }}
+                  whileTap={{ scale: 0.99 }}
+                  onClick={() => { setAccountType("superadmin"); setEmail("root@indionetworks.com"); }}
+                  className="w-full text-left p-4 rounded-2xl cursor-pointer transition-all"
+                  style={{ background: "#fff", border: "2px solid #E2E8F0", boxShadow: "0 2px 8px rgba(15,23,42,0.06)" }}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: "rgba(15,23,42,0.06)" }}>
+                      ⚙️
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: "rgba(15,23,42,0.08)", color: "#0F172A" }}>SUPER ADMIN</span>
+                  </div>
+                  <div className="font-bold text-slate-900 text-sm mb-1">Enterprise Console</div>
+                  <div className="text-[11px] text-slate-400 leading-relaxed space-y-0.5">
+                    <div>• Complete STMS infrastructure</div>
+                    <div>• Platform security & settings</div>
+                  </div>
+                </motion.button>
+
+                {/* Vendor Partner Card */}
+                <motion.button
+                  whileHover={{ scale: 1.015, boxShadow: "0 8px 24px rgba(13,148,136,0.12)" }}
+                  whileTap={{ scale: 0.99 }}
+                  onClick={() => { setAccountType("vendor" as any); setEmail("service@delta-electronics.in"); }}
+                  className="w-full text-left p-4 rounded-2xl cursor-pointer transition-all"
+                  style={{ background: "#fff", border: "2px solid #CCFBF1", boxShadow: "0 2px 8px rgba(13,148,136,0.06)" }}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: "rgba(13,148,136,0.08)" }}>
+                      🔧
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: "rgba(13,148,136,0.1)", color: "#0D9488" }}>VENDOR PARTNER</span>
+                  </div>
+                  <div className="font-bold text-slate-900 text-sm mb-1">Vendor FieldOps Platform</div>
+                  <div className="text-[11px] text-slate-400 leading-relaxed space-y-0.5">
+                    <div>• Maintenance dispatches & SLA countdowns</div>
+                    <div>• Engineer tracking & spare parts</div>
                   </div>
                 </motion.button>
 
@@ -169,23 +210,19 @@ export default function Login() {
                   whileHover={{ scale: 1.015, boxShadow: "0 8px 24px rgba(37,99,235,0.1)" }}
                   whileTap={{ scale: 0.99 }}
                   onClick={() => { setAccountType("customer"); setEmail("operator@vodafone.com"); }}
-                  className="w-full text-left p-5 rounded-2xl cursor-pointer transition-all"
+                  className="w-full text-left p-4 rounded-2xl cursor-pointer transition-all"
                   style={{ background: "#fff", border: "2px solid #E2E8F0", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}
                 >
-                  <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start justify-between mb-2">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl" style={{ background: "rgba(37,99,235,0.06)" }}>
                       🛰
                     </div>
                     <span className="text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: "rgba(37,99,235,0.08)", color: "#2563EB" }}>CUSTOMER</span>
                   </div>
                   <div className="font-bold text-slate-900 text-sm mb-1">Customer Workspace</div>
-                  <div className="text-xs text-slate-400 leading-relaxed space-y-0.5">
-                    <div>• Monitor your own sites & devices</div>
+                  <div className="text-[11px] text-slate-400 leading-relaxed space-y-0.5">
+                    <div>• Monitor sites & devices</div>
                     <div>• Real-time alarms & reports</div>
-                    <div>• Analytics for your network</div>
-                  </div>
-                  <div className="flex items-center gap-1.5 mt-3 text-xs font-semibold" style={{ color: "#2563EB" }}>
-                    Sign in as Customer <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                 </motion.button>
               </motion.div>
@@ -211,12 +248,12 @@ export default function Login() {
                   <div
                     className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold"
                     style={{
-                      background: accountType === "admin" ? "rgba(99,102,241,0.08)" : "rgba(37,99,235,0.06)",
-                      color: accountType === "admin" ? "#6366F1" : "#2563EB",
+                      background: accountType === "superadmin" ? "rgba(15,23,42,0.08)" : accountType === "admin" ? "rgba(99,102,241,0.08)" : "rgba(37,99,235,0.06)",
+                      color: accountType === "superadmin" ? "#0F172A" : accountType === "admin" ? "#6366F1" : "#2563EB",
                     }}
                   >
-                    {accountType === "admin" ? "🏢" : "🛰"}
-                    {accountType === "admin" ? "Platform Admin" : "Customer Workspace"}
+                    {accountType === "superadmin" ? "⚙️" : accountType === "admin" ? "🏢" : "🛰"}
+                    {accountType === "superadmin" ? "Super Admin" : accountType === "admin" ? "Platform Admin" : "Customer Workspace"}
                   </div>
                 </div>
 
@@ -226,7 +263,7 @@ export default function Login() {
                 >
                   <div>
                     <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back</h2>
-                    <p className="text-xs text-slate-400 mt-1">Sign in to continue to your {accountType === "admin" ? "admin console" : "monitoring dashboard"}.</p>
+                    <p className="text-xs text-slate-400 mt-1">Sign in to continue to your {accountType === "superadmin" ? "Super Admin console" : accountType === "admin" ? "admin console" : "monitoring dashboard"}.</p>
                   </div>
 
                   <form onSubmit={handleLogin} className="space-y-4">
@@ -269,7 +306,7 @@ export default function Login() {
                         <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="w-4 h-4 rounded border-slate-300 text-indigo-600 cursor-pointer" />
                         Remember me
                       </label>
-                      <a href="#" className="font-semibold" style={{ color: accountType === "admin" ? "#6366F1" : "#2563EB" }}>Forgot password?</a>
+                      <a href="#" className="font-semibold" style={{ color: accountType === "superadmin" ? "#0F172A" : accountType === "admin" ? "#6366F1" : "#2563EB" }}>Forgot password?</a>
                     </div>
 
                     {/* Log in Button */}
@@ -277,17 +314,17 @@ export default function Login() {
                       type="submit"
                       disabled={isLoading}
                       className="w-full h-11 font-bold text-sm rounded-xl text-white cursor-pointer transition-all"
-                      style={{ background: accountType === "admin" ? "linear-gradient(135deg, #6366F1, #8B5CF6)" : "#2563EB" }}
+                      style={{ background: accountType === "superadmin" ? "#0F172A" : accountType === "admin" ? "linear-gradient(135deg, #6366F1, #8B5CF6)" : "#2563EB" }}
                     >
                       {isLoading ? (
                         <span className="flex items-center gap-2">
                           <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Opening {accountType === "admin" ? "Admin Console" : "Dashboard"}...
+                          Opening {accountType === "superadmin" ? "Super Admin Console" : accountType === "admin" ? "Admin Console" : "Dashboard"}...
                         </span>
                       ) : (
                         <span className="flex items-center gap-2">
                           <Check className="w-4 h-4" />
-                          Sign in to {accountType === "admin" ? "Platform Admin" : "Customer Portal"}
+                          Sign in to {accountType === "superadmin" ? "Super Admin" : accountType === "admin" ? "Platform Admin" : "Customer Portal"}
                         </span>
                       )}
                     </Button>
