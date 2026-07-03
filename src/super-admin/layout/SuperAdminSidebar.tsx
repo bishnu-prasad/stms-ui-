@@ -1,98 +1,53 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
+import { motion } from "framer-motion";
 import {
   LayoutDashboard, Users, Server, Shield, Activity, Wallet,
-  FileText, Settings, ChevronDown, ChevronRight, Store, Box,
-  Database, HardDrive, Key, Cloud, ShieldCheck
+  FileText, Settings, Store, Box, Key, Cloud, ShieldCheck,
+  CreditCard, Award, Bell
 } from "lucide-react";
 
-type NavGroup = {
+interface NavItem {
   label: string;
+  href: string;
   icon: React.ElementType;
-  items?: { label: string; href: string }[];
-  href?: string;
-};
+}
 
-const navigation: NavGroup[] = [
+const navItems: NavItem[] = [
   { label: "Dashboard", href: "/super-admin/dashboard", icon: LayoutDashboard },
-  {
-    label: "Tenant Management", icon: Users,
-    items: [
-      { label: "Customers", href: "/super-admin/customers" },
-      { label: "Customer Health", href: "/super-admin/customer-health" },
-      { label: "Subscriptions", href: "/super-admin/subscriptions" }
-    ]
-  },
-  {
-    label: "User Management", icon: Shield,
-    items: [
-      { label: "Platform Users", href: "/super-admin/users" },
-      { label: "Roles", href: "/super-admin/roles" },
-      { label: "Permissions", href: "/super-admin/permissions" }
-    ]
-  },
-  {
-    label: "Infrastructure", icon: Server,
-    items: [
-      { label: "Platform Health", href: "/super-admin/infrastructure/health" },
-      { label: "Servers", href: "/super-admin/infrastructure/servers" },
-      { label: "Database", href: "/super-admin/infrastructure/database" },
-      { label: "Storage", href: "/super-admin/infrastructure/storage" },
-      { label: "Backup", href: "/super-admin/infrastructure/backup" },
-      { label: "API Gateway", href: "/super-admin/infrastructure/gateway" }
-    ]
-  },
-  {
-    label: "Vendor Management", icon: Store,
-    items: [
-      { label: "Vendors", href: "/super-admin/vendors" },
-      { label: "Vendor SLA", href: "/super-admin/vendor-sla" }
-    ]
-  },
-  { label: "Inventory", href: "/super-admin/inventory", icon: Box },
-  {
-    label: "Monitoring", icon: Activity,
-    items: [
-      { label: "Alerts", href: "/super-admin/monitoring/alerts" },
-      { label: "Audit Logs", href: "/super-admin/monitoring/audit-logs" }
-    ]
-  },
+  { label: "Customers", href: "/super-admin/customers", icon: Users },
+  { label: "Platform Users", href: "/super-admin/users", icon: ShieldCheck },
+  { label: "Infrastructure", href: "/super-admin/infrastructure/health", icon: Server },
+  { label: "Security", href: "/super-admin/permissions", icon: Shield },
+  { label: "Licensing", href: "/super-admin/subscriptions", icon: Key },
+  { label: "Billing", href: "/super-admin/customer-health", icon: CreditCard },
+  { label: "Monitoring", href: "/super-admin/monitoring/alerts", icon: Activity },
   { label: "Reports", href: "/super-admin/reports", icon: FileText },
-  { label: "System Settings", href: "/super-admin/settings", icon: Settings }
+  { label: "Audit Logs", href: "/super-admin/monitoring/audit-logs", icon: Award },
+  { label: "Settings", href: "/super-admin/settings", icon: Settings },
 ];
 
 export function SuperAdminSidebar() {
   const [location, setLocation] = useLocation();
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
-    "Infrastructure": true,
-    "Tenant Management": true
-  });
 
-  const toggleGroup = (label: string) => {
-    setExpandedGroups(prev => ({ ...prev, [label]: !prev[label] }));
-  };
-
-  const isActive = (href: string) => location === href || location.startsWith(href + "?");
-  
-  const isGroupActive = (items: {href: string}[]) => items.some(item => isActive(item.href));
+  const isActive = (href: string) => location === href || (href !== "/super-admin/dashboard" && location.startsWith(href));
 
   return (
-    <aside
-      className="flex flex-col h-screen w-[260px] shrink-0 z-50 overflow-hidden bg-white border-r border-slate-200"
-    >
+    <aside className="flex flex-col h-screen w-[250px] shrink-0 z-50 overflow-hidden bg-white border-r border-slate-200/90 select-none shadow-xs">
       {/* Brand Header */}
       <div 
         onClick={() => setLocation("/super-admin/dashboard")}
-        className="flex items-center h-[56px] px-6 shrink-0 border-b border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors"
+        className="flex items-center h-[56px] px-6 shrink-0 border-b border-slate-200 cursor-pointer hover:bg-slate-50/80 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <ShieldCheck className="w-5 h-5 text-blue-600" />
+          <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-xs">
+            <ShieldCheck className="w-4 h-4" />
+          </div>
           <div>
-            <div className="text-[14px] font-bold text-slate-900 tracking-tight leading-none">
+            <div className="text-[14px] font-extrabold text-slate-900 tracking-tight leading-none">
               STMS Enterprise
             </div>
-            <div className="text-[11px] font-medium text-slate-500 mt-1">
+            <div className="text-[11px] font-semibold text-blue-600 mt-1">
               Super Admin Console
             </div>
           </div>
@@ -100,92 +55,36 @@ export function SuperAdminSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-5 px-4 space-y-1 custom-scrollbar">
-        {navigation.map((group) => {
-          if (group.href) {
-            // Single Item
-            const active = isActive(group.href);
-            return (
-              <button
-                key={group.label}
-                onClick={() => setLocation(group.href!)}
-                className="w-full flex items-center gap-3 h-[36px] px-3 rounded-md transition-colors cursor-pointer text-left"
-                style={{
-                  background: active ? "rgba(37,99,235,0.08)" : "transparent",
-                  color: active ? "#2563EB" : "#64748B",
-                }}
-              >
-                <group.icon className="w-4 h-4 shrink-0" style={{ strokeWidth: active ? 2.5 : 2 }} />
-                <span className={`text-[13px] ${active ? 'font-semibold' : 'font-medium hover:text-slate-900'}`}>{group.label}</span>
-              </button>
-            );
-          }
-
-          // Expandable Group
-          const groupActive = group.items ? isGroupActive(group.items) : false;
-          const expanded = expandedGroups[group.label] || false;
-
+      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1 custom-scrollbar">
+        {navItems.map((item) => {
+          const active = isActive(item.href);
           return (
-            <div key={group.label} className="pt-1.5 pb-0.5">
-              <button
-                onClick={() => toggleGroup(group.label)}
-                className="w-full flex items-center justify-between h-[36px] px-3 rounded-md transition-colors cursor-pointer text-left hover:bg-slate-50"
-                style={{ color: groupActive ? "#0F172A" : "#64748B" }}
-              >
-                <div className="flex items-center gap-3">
-                  <group.icon className={`w-4 h-4 shrink-0 ${groupActive ? 'text-blue-600' : ''}`} style={{ strokeWidth: 2 }} />
-                  <span className={`text-[13px] ${groupActive ? 'font-semibold' : 'font-medium'}`}>{group.label}</span>
-                </div>
-                {expanded ? (
-                  <ChevronDown className="w-3.5 h-3.5 opacity-50" />
-                ) : (
-                  <ChevronRight className="w-3.5 h-3.5 opacity-50" />
-                )}
-              </button>
-              
-              <AnimatePresence initial={false}>
-                {expanded && group.items && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden ml-[26px] border-l border-slate-200 mt-1 pl-3 flex flex-col gap-0.5"
-                  >
-                    {group.items.map((item) => {
-                      const itemActive = isActive(item.href);
-                      return (
-                        <button
-                          key={item.label}
-                          onClick={() => setLocation(item.href)}
-                          className="w-full flex items-center h-[32px] px-3 rounded-md transition-colors cursor-pointer text-left text-[13px]"
-                          style={{
-                            background: itemActive ? "rgba(37,99,235,0.08)" : "transparent",
-                            color: itemActive ? "#2563EB" : "#64748B",
-                            fontWeight: itemActive ? 600 : 500,
-                          }}
-                        >
-                          <span className={!itemActive ? "hover:text-slate-900 transition-colors" : ""}>
-                            {item.label}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            <button
+              key={item.label}
+              onClick={() => setLocation(item.href)}
+              className="w-full flex items-center gap-3 h-[38px] px-3.5 rounded-xl transition-colors cursor-pointer text-left group"
+              style={{
+                background: active ? "rgba(37,99,235,0.08)" : "transparent",
+                color: active ? "#2563EB" : "#64748B",
+              }}
+            >
+              <item.icon 
+                className={`w-4 h-4 shrink-0 transition-transform group-hover:scale-110 ${active ? 'text-blue-600' : 'text-slate-400'}`} 
+                style={{ strokeWidth: active ? 2.5 : 2 }} 
+              />
+              <span className={`text-[13px] ${active ? 'font-bold' : 'font-medium group-hover:text-slate-900'}`}>
+                {item.label}
+              </span>
+            </button>
           );
         })}
       </nav>
-      
-      {/* Custom scrollbar styles */}
-      <style>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
-      `}</style>
+
+      {/* Footer Info */}
+      <div className="p-4 border-t border-slate-100 text-[11px] text-slate-400 font-mono">
+        <div>STMS Cloud v3.4.2</div>
+        <div className="text-slate-500 font-semibold mt-0.5">Region: ap-south-1</div>
+      </div>
     </aside>
   );
 }

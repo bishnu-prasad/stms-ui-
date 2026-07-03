@@ -1,85 +1,76 @@
+import { useState } from "react";
 import { EnterprisePageTemplate } from "../../components/Enterprise/EnterprisePageTemplate";
+import { KPICard } from "../../components/Enterprise/KPICard";
+import { ChartCard, SimpleBarChart, SimpleLineChart } from "../../components/Enterprise/ChartCard";
 import { DataTable } from "../../components/Enterprise/DataTable";
-import { ChartCard, SimpleLineChart, SimpleBarChart } from "../../components/Enterprise/ChartCard";
+import { ShieldCheck, Server, Activity, Users, Clock } from "lucide-react";
 
 export default function AuditLogsPage() {
-  const kpis = [
-    { title: "Failed Logins", value: "18"  },
-    { title: "Blocked IPs", value: "6"  },
-    { title: "Password Resets", value: "2"  },
-    { title: "Critical Threats", value: "0"  }
+  const kpis = (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <KPICard title="Audit Trail Count" value="1.2M Logs" status="Retention 365 days" delay={0.05} />
+      <KPICard title="Integrity Verification" value="100%" status="Cryptographically signed" delay={0.1} />
+      <KPICard title="SOC2 Compliance" value="Passed" status="Audit certified" delay={0.15} />
+      <KPICard title="Security Events" value="24 Today" status="Automated IP blocks" delay={0.2} />
+    </div>
+  );
+
+  const charts = (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <ChartCard title="Daily Administrative Audit Events" subtitle="What is the volume of administrative actions recorded per hour?" delay={0.25}>
+        <SimpleBarChart data={[{"name":"Jan","value":120,"sla":99.8},{"name":"Feb","value":135,"sla":99.9},{"name":"Mar","value":142,"sla":99.7},{"name":"Apr","value":158,"sla":99.9},{"name":"May","value":175,"sla":99.8},{"name":"Jun","value":190,"sla":100}]} dataKey="value" categoryKey="name" color="#2563EB" />
+      </ChartCard>
+      <ChartCard title="Platform SLA & Availability Trend" subtitle="Is system availability remaining strictly above 99.9% target?" delay={0.3}>
+        <SimpleLineChart data={[{"name":"Jan","value":120,"sla":99.8},{"name":"Feb","value":135,"sla":99.9},{"name":"Mar","value":142,"sla":99.7},{"name":"Apr","value":158,"sla":99.9},{"name":"May","value":175,"sla":99.8},{"name":"Jun","value":190,"sla":100}]} dataKey="sla" categoryKey="name" color="#16A34A" />
+      </ChartCard>
+    </div>
+  );
+
+  const sampleTableData = [
+    { id: "REC-101", name: "Reliance Jio Infocomm", category: "Enterprise Tier 1", metric: "99.4% Health", updated: "2 mins ago", status: "Active" },
+    { id: "REC-102", name: "Bharti Airtel Ltd", category: "Enterprise Tier 1", metric: "98.8% Health", updated: "5 mins ago", status: "Active" },
+    { id: "REC-103", name: "Vodafone Idea (Vi)", category: "Enterprise Tier 2", metric: "97.6% Health", updated: "12 mins ago", status: "Active" },
+    { id: "REC-104", name: "Indus Towers Ltd", category: "Infrastructure Partner", metric: "99.8% Health", updated: "Just now", status: "Active" },
   ];
 
   const tableColumns = [
-    { header: "Action", accessor: (row: any) => <span className="font-medium">{row.action || row.action || "Data"}</span> },
-    { header: "Actor", accessor: (row: any) => <span className="font-medium">{row.actor || row.actor || "Data"}</span> },
-    { header: "IP Address", accessor: (row: any) => <span className="font-medium">{row.ip || row.ipaddress || "Data"}</span> },
-    { header: "Timestamp", accessor: (row: any) => <span className="font-medium">{row.time || row.timestamp || "Data"}</span> }
+    { header: "Record ID", accessor: (r: any) => <span className="font-mono font-bold text-blue-600">{r.id}</span> },
+    { header: "Entity Name", accessor: (r: any) => <span className="font-bold text-slate-900">{r.name}</span> },
+    { header: "Category", accessor: (r: any) => <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">{r.category}</span> },
+    { header: "Operational Status", accessor: (r: any) => <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-xs">{r.metric}</span> },
+    { header: "Last Activity", accessor: (r: any) => <span className="text-slate-400 text-xs">{r.updated}</span> },
   ];
 
-  const tableData = [
-    {"action":"Tenant Provisioned","actor":"Arjun Mehta","ip":"192.168.1.42","time":"1 hour ago"},
-    {"action":"Failed Login","actor":"System","ip":"45.22.11.x","time":"2 hours ago"}
-  ];
+  const table = (
+    <DataTable
+      columns={tableColumns}
+      data={sampleTableData}
+    />
+  );
 
-  const mockChartData = [
-    { name: 'Mon', value: 400 },
-    { name: 'Tue', value: 300 },
-    { name: 'Wed', value: 550 },
-    { name: 'Thu', value: 480 },
-    { name: 'Fri', value: 600 },
-    { name: 'Sat', value: 200 },
-    { name: 'Sun', value: 250 },
+  const recommendations = [
+    {
+      title: "Optimize Security Audit & Compliance Logs Operational Parameters",
+      detail: "Telemetry analysis recommends adjusting buffer allocations to maintain peak performance during 09:00 AM peak hours.",
+      actionLabel: "Execute Optimization Task"
+    },
+    {
+      title: "Schedule Routine Security Audit",
+      detail: "SOC2 compliance guidelines mandate quarterly credential and access key rotation for this module.",
+      actionLabel: "Initiate Security Review"
+    }
   ];
 
   return (
     <EnterprisePageTemplate
-      title={`Security & Audit Logs`}
-      summary={`Security posture is healthy. Multiple failed login attempts from unknown IPs were automatically blocked. No abnormal API usage detected. 2 password resets processed.`}
+      greeting="Audit & Compliance"
+      title="Security Audit & Compliance Logs"
+      summary="Immutable audit trail of all platform administrator actions, API key modifications, tenant provisioning events, and security access attempts."
+      icon={<ShieldCheck className="w-7 h-7 text-blue-600" />}
       kpis={kpis}
-      charts={
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartCard title="Activity Trend">
-            <SimpleLineChart data={mockChartData} color="#2563EB" />
-          </ChartCard>
-          <ChartCard title="Distribution">
-            <SimpleBarChart data={mockChartData} color="#60A5FA" />
-          </ChartCard>
-        </div>
-      }
-      table={
-        <DataTable 
-          columns={tableColumns} 
-          data={tableData} 
-        />
-      }
-      recommendations={
-        <div className="space-y-4">
-          <div className="flex gap-3 items-start">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
-            <p className="text-[13px] text-slate-700 leading-relaxed">Review the recent alerts for Tenant B to ensure SLAs are not impacted.</p>
-          </div>
-          <div className="flex gap-3 items-start">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
-            <p className="text-[13px] text-slate-700 leading-relaxed">Schedule a database vacuum process during the next maintenance window.</p>
-          </div>
-        </div>
-      }
-      recentActivity={
-        <div className="space-y-5">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex gap-4">
-              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 text-[11px] font-bold text-slate-500">
-                SA
-              </div>
-              <div>
-                <p className="text-[13px] font-medium text-slate-900">System admin updated configuration</p>
-                <p className="text-[12px] text-slate-500 mt-0.5">{i * 2} hours ago</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      }
+      charts={charts}
+      table={table}
+      recommendations={recommendations}
     />
   );
 }

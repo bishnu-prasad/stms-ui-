@@ -1,81 +1,76 @@
+import { useState } from "react";
 import { EnterprisePageTemplate } from "../../components/Enterprise/EnterprisePageTemplate";
+import { KPICard } from "../../components/Enterprise/KPICard";
+import { ChartCard, SimpleBarChart, SimpleLineChart } from "../../components/Enterprise/ChartCard";
 import { DataTable } from "../../components/Enterprise/DataTable";
-import { ChartCard, SimpleLineChart, SimpleBarChart } from "../../components/Enterprise/ChartCard";
+import { ShieldCheck, Server, Activity, Users, Clock } from "lucide-react";
 
 export default function ApiGatewayPage() {
-  const kpis = [
-    { title: "Requests / sec", value: "4,200"  },
-    { title: "Cache Hit", value: "40%"  }
+  const kpis = (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <KPICard title="Daily API Calls" value="42.8M" status="Avg 495 req/sec" delay={0.05} />
+      <KPICard title="Gateway Latency" value="4.2 ms" status="Sub-5ms SLA" delay={0.1} />
+      <KPICard title="Error Rate 5xx" value="0.001%" status="Exceptional stability" delay={0.15} />
+      <KPICard title="Blocked Abuse Req" value="2,410" status="Automatically rejected" delay={0.2} />
+    </div>
+  );
+
+  const charts = (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <ChartCard title="API Throughput & Rate Limit Enforcement" subtitle="What is the peak hourly API call volume handled by gateway nodes?" delay={0.25}>
+        <SimpleBarChart data={[{"name":"Jan","value":120,"sla":99.8},{"name":"Feb","value":135,"sla":99.9},{"name":"Mar","value":142,"sla":99.7},{"name":"Apr","value":158,"sla":99.9},{"name":"May","value":175,"sla":99.8},{"name":"Jun","value":190,"sla":100}]} dataKey="value" categoryKey="name" color="#2563EB" />
+      </ChartCard>
+      <ChartCard title="Platform SLA & Availability Trend" subtitle="Is system availability remaining strictly above 99.9% target?" delay={0.3}>
+        <SimpleLineChart data={[{"name":"Jan","value":120,"sla":99.8},{"name":"Feb","value":135,"sla":99.9},{"name":"Mar","value":142,"sla":99.7},{"name":"Apr","value":158,"sla":99.9},{"name":"May","value":175,"sla":99.8},{"name":"Jun","value":190,"sla":100}]} dataKey="sla" categoryKey="name" color="#16A34A" />
+      </ChartCard>
+    </div>
+  );
+
+  const sampleTableData = [
+    { id: "REC-101", name: "Reliance Jio Infocomm", category: "Enterprise Tier 1", metric: "99.4% Health", updated: "2 mins ago", status: "Active" },
+    { id: "REC-102", name: "Bharti Airtel Ltd", category: "Enterprise Tier 1", metric: "98.8% Health", updated: "5 mins ago", status: "Active" },
+    { id: "REC-103", name: "Vodafone Idea (Vi)", category: "Enterprise Tier 2", metric: "97.6% Health", updated: "12 mins ago", status: "Active" },
+    { id: "REC-104", name: "Indus Towers Ltd", category: "Infrastructure Partner", metric: "99.8% Health", updated: "Just now", status: "Active" },
   ];
 
   const tableColumns = [
-    { header: "Endpoint", accessor: (row: any) => <span className="font-medium">{row.endpoint || row.endpoint || "Data"}</span> },
-    { header: "Traffic", accessor: (row: any) => <span className="font-medium">{row.traffic || row.traffic || "Data"}</span> },
-    { header: "Latency", accessor: (row: any) => <span className="font-medium">{row.latency || row.latency || "Data"}</span> }
+    { header: "Record ID", accessor: (r: any) => <span className="font-mono font-bold text-blue-600">{r.id}</span> },
+    { header: "Entity Name", accessor: (r: any) => <span className="font-bold text-slate-900">{r.name}</span> },
+    { header: "Category", accessor: (r: any) => <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">{r.category}</span> },
+    { header: "Operational Status", accessor: (r: any) => <span className="font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-xs">{r.metric}</span> },
+    { header: "Last Activity", accessor: (r: any) => <span className="text-slate-400 text-xs">{r.updated}</span> },
   ];
 
-  const tableData = [
-    {"name":"/api/v1/telemetry","traffic":"2.4k/s","latency":"12ms"}
-  ];
+  const table = (
+    <DataTable
+      columns={tableColumns}
+      data={sampleTableData}
+    />
+  );
 
-  const mockChartData = [
-    { name: 'Mon', value: 400 },
-    { name: 'Tue', value: 300 },
-    { name: 'Wed', value: 550 },
-    { name: 'Thu', value: 480 },
-    { name: 'Fri', value: 600 },
-    { name: 'Sat', value: 200 },
-    { name: 'Sun', value: 250 },
+  const recommendations = [
+    {
+      title: "Optimize API Gateway & Rate Limiting Engine Operational Parameters",
+      detail: "Telemetry analysis recommends adjusting buffer allocations to maintain peak performance during 09:00 AM peak hours.",
+      actionLabel: "Execute Optimization Task"
+    },
+    {
+      title: "Schedule Routine Security Audit",
+      detail: "SOC2 compliance guidelines mandate quarterly credential and access key rotation for this module.",
+      actionLabel: "Initiate Security Review"
+    }
   ];
 
   return (
     <EnterprisePageTemplate
-      title={`API Gateway`}
-      summary={`Gateway is routing 4,200 requests per second. Edge caching is absorbing 40% of traffic. No rate limits triggered for enterprise tenants. Two IPs blocked for brute force.`}
+      greeting="API Gateway Management"
+      title="API Gateway & Rate Limiting Engine"
+      summary="Kong/Envoy API Gateway managing 42M daily telemetry and REST API requests. Rate-limiting rules active with zero unauthorized access breaches."
+      icon={<ShieldCheck className="w-7 h-7 text-blue-600" />}
       kpis={kpis}
-      charts={
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <ChartCard title="Activity Trend">
-            <SimpleLineChart data={mockChartData} color="#2563EB" />
-          </ChartCard>
-          <ChartCard title="Distribution">
-            <SimpleBarChart data={mockChartData} color="#60A5FA" />
-          </ChartCard>
-        </div>
-      }
-      table={
-        <DataTable 
-          columns={tableColumns} 
-          data={tableData} 
-        />
-      }
-      recommendations={
-        <div className="space-y-4">
-          <div className="flex gap-3 items-start">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
-            <p className="text-[13px] text-slate-700 leading-relaxed">Review the recent alerts for Tenant B to ensure SLAs are not impacted.</p>
-          </div>
-          <div className="flex gap-3 items-start">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 shrink-0" />
-            <p className="text-[13px] text-slate-700 leading-relaxed">Schedule a database vacuum process during the next maintenance window.</p>
-          </div>
-        </div>
-      }
-      recentActivity={
-        <div className="space-y-5">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex gap-4">
-              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200 text-[11px] font-bold text-slate-500">
-                SA
-              </div>
-              <div>
-                <p className="text-[13px] font-medium text-slate-900">System admin updated configuration</p>
-                <p className="text-[12px] text-slate-500 mt-0.5">{i * 2} hours ago</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      }
+      charts={charts}
+      table={table}
+      recommendations={recommendations}
     />
   );
 }

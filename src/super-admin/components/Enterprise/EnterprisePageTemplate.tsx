@@ -1,100 +1,110 @@
 import { ReactNode } from "react";
 import { HeroBriefing } from "./HeroBriefing";
-import { KPICard } from "./KPICard";
-import { SectionCard } from "./SectionCard";
-
-interface KPI {
-  title: string;
-  value: string | number;
-  trend?: {
-    value: string;
-    isPositive: boolean;
-    isNeutral?: boolean;
-  };
-  icon?: ReactNode;
-}
+import { OperationalTimeline } from "./OperationalTimeline";
+import { PendingActionsPanel } from "./PendingActionsPanel";
 
 interface EnterprisePageTemplateProps {
+  greeting?: string;
   title: string;
   summary: string;
-  status?: "normal" | "warning" | "critical";
   icon?: ReactNode;
-  kpis: KPI[];
+  kpis?: ReactNode;
   charts?: ReactNode;
-  tableTitle?: string;
-  tableDescription?: string;
-  tableAction?: ReactNode;
-  table: ReactNode;
-  recommendations?: ReactNode;
-  recentActivity?: ReactNode;
+  operationalInsights?: ReactNode;
+  table?: ReactNode;
+  recommendations?: { title: string; detail: string; actionLabel?: string }[];
+  extraSection?: ReactNode;
 }
 
 export function EnterprisePageTemplate({
+  greeting,
   title,
   summary,
-  status = "normal",
   icon,
   kpis,
   charts,
-  tableTitle = "Detailed Records",
-  tableDescription,
-  tableAction,
+  operationalInsights,
   table,
   recommendations,
-  recentActivity
+  extraSection
 }: EnterprisePageTemplateProps) {
   return (
-    <div className="pb-12">
-      <HeroBriefing 
+    <div className="p-8 max-w-[1650px] mx-auto space-y-8 font-sans">
+      {/* 1. Executive Briefing Narrative */}
+      <HeroBriefing
+        greeting={greeting}
         title={title}
-        summary={summary}
+        narrative={summary}
         icon={icon}
-        status={status}
       />
 
-      {kpis.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {kpis.map((kpi, index) => (
-            <KPICard 
-              key={index} 
-              {...kpi} 
-              delay={0.1 + (index * 0.05)} 
-            />
-          ))}
-        </div>
+      {/* 2. KPI Summary Grid */}
+      {kpis && (
+        <section className="space-y-3">
+          <h2 className="text-[12px] font-bold uppercase tracking-wider text-slate-400">Executive Key Performance Indicators</h2>
+          {kpis}
+        </section>
       )}
 
+      {/* 3. Operational Charts (1-3 Charts) */}
       {charts && (
-        <div className="mb-8">
+        <section className="space-y-3">
+          <h2 className="text-[12px] font-bold uppercase tracking-wider text-slate-400">Platform Analytics & Trends</h2>
           {charts}
-        </div>
+        </section>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-        <div className="lg:col-span-2 flex flex-col gap-8">
-          <SectionCard 
-            title={tableTitle} 
-            description={tableDescription}
-            action={tableAction}
-            delay={0.3}
-          >
+      {/* 4. Operational Insights */}
+      {operationalInsights && (
+        <section className="space-y-3">
+          <h2 className="text-[12px] font-bold uppercase tracking-wider text-slate-400">Operational Insights & Telemetry</h2>
+          {operationalInsights}
+        </section>
+      )}
+
+      {extraSection}
+
+      {/* 5. Primary Data Table */}
+      {table && (
+        <section className="space-y-3">
+          <h2 className="text-[12px] font-bold uppercase tracking-wider text-slate-400">System Records & Data Ledger</h2>
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs overflow-hidden">
             {table}
-          </SectionCard>
-        </div>
-        
-        <div className="flex flex-col gap-8">
-          {recommendations && (
-            <SectionCard title="Recommendations" delay={0.4} className="bg-blue-50/30 border-blue-100">
-              {recommendations}
-            </SectionCard>
+          </div>
+        </section>
+      )}
+
+      {/* 6. Recommended Actions & 7. Recent Activity Timeline */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recommended Actions */}
+        <section className="space-y-3">
+          <h2 className="text-[12px] font-bold uppercase tracking-wider text-slate-400">Recommended Operational Actions</h2>
+          {recommendations && recommendations.length > 0 ? (
+            <div className="space-y-3">
+              {recommendations.map((rec, idx) => (
+                <div key={idx} className="bg-blue-50/50 border border-blue-100 rounded-xl p-5 flex flex-col justify-between space-y-3">
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900 mb-1">{rec.title}</h4>
+                    <p className="text-xs text-slate-600 leading-relaxed">{rec.detail}</p>
+                  </div>
+                  {rec.actionLabel && (
+                    <button className="text-xs font-bold text-blue-700 hover:text-blue-900 flex items-center gap-1 cursor-pointer w-fit">
+                      {rec.actionLabel} →
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <PendingActionsPanel />
           )}
-          
-          {recentActivity && (
-            <SectionCard title="Recent Activity" delay={0.5}>
-              {recentActivity}
-            </SectionCard>
-          )}
-        </div>
+        </section>
+
+        {/* Recent Activity */}
+        <section className="space-y-3">
+          <h2 className="text-[12px] font-bold uppercase tracking-wider text-slate-400">Recent Platform Activity</h2>
+          <OperationalTimeline />
+        </section>
       </div>
     </div>
   );

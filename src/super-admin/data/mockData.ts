@@ -1,125 +1,154 @@
-// Super Admin Mock Data for Enterprise Administrative Console
+export interface SystemServiceHealth {
+  id: string;
+  name: string;
+  category: "Gateway" | "Auth" | "Database" | "Cache" | "Analytics" | "Ingestion" | "Storage" | "Worker" | "Notification";
+  status: "Healthy" | "Degraded" | "Maintenance";
+  latencyMs: number;
+  cpuPct: number;
+  memoryPct: number;
+  version: string;
+  uptimePct: number;
+  lastIncident: string;
+}
 
-export const platformHealthServices = [
-  { id: "svc-1", name: "Authentication", status: "healthy", uptime: 99.99, responseTime: 18, version: "v2.1.4" },
-  { id: "svc-2", name: "API Gateway", status: "healthy", uptime: 99.98, responseTime: 42, version: "v3.0.1" },
-  { id: "svc-3", name: "PostgreSQL", status: "healthy", uptime: 100.0, responseTime: 8, version: "16.2" },
-  { id: "svc-4", name: "Redis", status: "healthy", uptime: 100.0, responseTime: 2, version: "7.2.4" },
-  { id: "svc-5", name: "ClickHouse", status: "warning", uptime: 99.95, responseTime: 145, version: "24.3.1" },
-  { id: "svc-6", name: "MQTT Broker", status: "healthy", uptime: 99.97, responseTime: 22, version: "v5.0.0" },
-  { id: "svc-7", name: "Notification Service", status: "healthy", uptime: 99.99, responseTime: 35, version: "v1.4.2" },
-  { id: "svc-8", name: "Scheduler", status: "healthy", uptime: 100.0, responseTime: 12, version: "v2.0.0" },
-  { id: "svc-9", name: "Analytics Engine", status: "healthy", uptime: 99.96, responseTime: 85, version: "v1.8.5" },
-  { id: "svc-10", name: "Storage Service", status: "healthy", uptime: 100.0, responseTime: 45, version: "v2.2.0" },
-  { id: "svc-11", name: "IoT Gateway", status: "warning", uptime: 99.92, responseTime: 120, version: "v4.1.0" },
-];
+export interface ActivityLogItem {
+  id: string;
+  timestamp: string;
+  operator: string;
+  action: string;
+  category: "Provisioning" | "Backup" | "Security" | "Infrastructure" | "Billing" | "Config";
+  severity: "INFO" | "SUCCESS" | "WARNING" | "CRITICAL";
+  details: string;
+}
 
-export const kpiStats = {
-  customers: { value: 142, trend: "+4", trendType: "positive" },
-  platformUsers: { value: 28, trend: "+2", trendType: "positive" },
-  devices: { value: 64285, trend: "+1250", trendType: "positive" },
-  platformServices: { value: 11, trend: "100%", trendType: "neutral" },
-  pendingApprovals: { value: 8, trend: "+3", trendType: "warning" },
-  openTickets: { value: 24, trend: "-5", trendType: "positive" },
-  expiredLicenses: { value: 2, trend: "+2", trendType: "negative" },
-  failedBackups: { value: 0, trend: "0", trendType: "neutral" }
+export interface PendingActionItem {
+  id: string;
+  title: string;
+  category: "Billing" | "Infrastructure" | "Security" | "Customer";
+  priority: "HIGH" | "MEDIUM" | "LOW";
+  details: string;
+  impact: string;
+  actionLabel: string;
+}
+
+export interface ExecutiveMetric {
+  title: string;
+  value: string | number;
+  status: string;
+  statusColor: string;
+  trend: string;
+  trendPositive: boolean;
+  chartData: { name: string; val: number }[];
+  recommendedAction: string;
+}
+
+export const platformSystemInfo = {
+  platformName: "STMS Cloud Enterprise",
+  version: "v3.4.2-prod",
+  deploymentRegion: "ap-south-1 (Mumbai)",
+  lastDeployment: "2 hours ago (Build #1482)",
+  systemUptime: "99.98%",
+  uptimeDuration: "148 days, 12 hrs",
+  activeCustomers: 142,
+  activeServers: 48,
+  totalStorageTb: 124.5,
+  monthlyArr: "₹4.82 Cr",
+  mrr: "₹40.1L",
+  platformStatus: "All Core Services Operational"
 };
 
-export const pendingTasks = [
-  { id: "pt-1", type: "Customer Approval", target: "Tata Communications", requestedBy: "Raj Sharma", time: "2 hours ago" },
-  { id: "pt-2", type: "License Renewal", target: "Vodafone Idea (Enterprise)", requestedBy: "System", time: "4 hours ago" },
-  { id: "pt-3", type: "Vendor Registration", target: "Huawei Networks", requestedBy: "Admin", time: "1 day ago" },
-  { id: "pt-4", type: "Firmware Pending", target: "Delta SMPS v2.4 (Critical)", requestedBy: "Vendor", time: "1 day ago" },
-  { id: "pt-5", type: "Role Assignment", target: "Amit Kumar -> Billing Admin", requestedBy: "Super Admin", time: "2 days ago" },
+export const executiveSummaries: ExecutiveMetric[] = [
+  {
+    title: "Enterprise Customers",
+    value: "142 Tenants",
+    status: "99.2% Health Score",
+    statusColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    trend: "+4 this month",
+    trendPositive: true,
+    chartData: [{ name: "Jan", val: 128 }, { name: "Feb", val: 132 }, { name: "Mar", val: 135 }, { name: "Apr", val: 138 }, { name: "May", val: 142 }],
+    recommendedAction: "Review 2 pending customer onboarding requests"
+  },
+  {
+    title: "Platform Availability",
+    value: "99.98%",
+    status: "Exceeding SLA",
+    statusColor: "bg-teal-50 text-teal-700 border-teal-200",
+    trend: "0 Unscheduled Outages",
+    trendPositive: true,
+    chartData: [{ name: "Mon", val: 99.98 }, { name: "Tue", val: 99.99 }, { name: "Wed", val: 99.97 }, { name: "Thu", val: 99.98 }, { name: "Fri", val: 99.99 }],
+    recommendedAction: "View multi-region latency telemetry"
+  },
+  {
+    title: "Infrastructure Load",
+    value: "22% Avg CPU",
+    status: "Optimal Capacity",
+    statusColor: "bg-blue-50 text-blue-700 border-blue-200",
+    trend: "RAM: 38% / Storage: 42%",
+    trendPositive: true,
+    chartData: [{ name: "00:00", val: 18 }, { name: "06:00", val: 24 }, { name: "12:00", val: 28 }, { name: "18:00", val: 21 }, { name: "24:00", val: 19 }],
+    recommendedAction: "Redis cache memory optimization advised"
+  },
+  {
+    title: "Financial ARR / MRR",
+    value: "₹4.82 Cr",
+    status: "MRR: ₹40.1L",
+    statusColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    trend: "+14.2% YoY",
+    trendPositive: true,
+    chartData: [{ name: "Q1", val: 3.8 }, { name: "Q2", val: 4.1 }, { name: "Q3", val: 4.5 }, { name: "Q4", val: 4.82 }],
+    recommendedAction: "2 Enterprise renewals scheduled this week"
+  },
+  {
+    title: "Security & Access",
+    value: "0 Incidents",
+    status: "100% MFA Enforced",
+    statusColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    trend: "24 Blocked IPs today",
+    trendPositive: true,
+    chartData: [{ name: "Mon", val: 12 }, { name: "Tue", val: 18 }, { name: "Wed", val: 8 }, { name: "Thu", val: 24 }, { name: "Fri", val: 15 }],
+    recommendedAction: "Audited service account key rotation"
+  },
+  {
+    title: "Platform Incidents",
+    value: "0 Critical",
+    status: "2 Low Advisory",
+    statusColor: "bg-amber-50 text-amber-700 border-amber-200",
+    trend: "MTTR: 8.4 mins",
+    trendPositive: true,
+    chartData: [{ name: "W1", val: 2 }, { name: "W2", val: 1 }, { name: "W3", val: 3 }, { name: "W4", val: 0 }],
+    recommendedAction: "Inspect ClickHouse storage volume compression"
+  }
 ];
 
-export const securityMetrics = {
-  failedLogins: 142,
-  blockedIps: 18,
-  mfaEnabled: "98.5%",
-  activeSessions: 425,
-  expiredTokens: 1240,
-  passwordExpiry: 12
-};
-
-export const auditLogs = [
-  { id: "aud-1", actor: "Arjun Mehta (Super Admin)", action: "Created API Key", resource: "Analytics Integration", ip: "103.11.22.33", time: "10 mins ago" },
-  { id: "aud-2", actor: "System", action: "Database Backup", resource: "PostgreSQL Primary", ip: "10.0.1.5", time: "45 mins ago" },
-  { id: "aud-3", actor: "Priya Patel (Admin)", action: "Updated Permissions", resource: "Billing Role", ip: "115.112.44.55", time: "2 hours ago" },
-  { id: "aud-4", actor: "Raj Sharma (Admin)", action: "Customer Provisioned", resource: "BSNL Enterprise", ip: "103.11.22.44", time: "3 hours ago" },
-  { id: "aud-5", actor: "System Guard", action: "IP Blocked", resource: "Failed Logins (5+)", ip: "45.22.11.99", time: "5 hours ago" },
+export const systemServices: SystemServiceHealth[] = [
+  { id: "srv-1", name: "API Gateway (Envoy/Kong)", category: "Gateway", status: "Healthy", latencyMs: 4.2, cpuPct: 14, memoryPct: 28, version: "v2.8.1", uptimePct: 99.99, lastIncident: "None in 45 days" },
+  { id: "srv-2", name: "Authentication (Auth0/OAuth2)", category: "Auth", status: "Healthy", latencyMs: 8.1, cpuPct: 18, memoryPct: 32, version: "v3.1.0", uptimePct: 100.0, lastIncident: "None in 60 days" },
+  { id: "srv-3", name: "PostgreSQL Primary Cluster", category: "Database", status: "Healthy", latencyMs: 2.1, cpuPct: 24, memoryPct: 48, version: "v15.4", uptimePct: 99.98, lastIncident: "Minor failover 12 days ago" },
+  { id: "srv-4", name: "Redis In-Memory Cache", category: "Cache", status: "Healthy", latencyMs: 0.4, cpuPct: 8, memoryPct: 62, version: "v7.0.11", uptimePct: 99.99, lastIncident: "None in 90 days" },
+  { id: "srv-5", name: "ClickHouse Telemetry DB", category: "Analytics", status: "Healthy", latencyMs: 12.4, cpuPct: 31, memoryPct: 41, version: "v23.8", uptimePct: 99.95, lastIncident: "Index optimization 3 days ago" },
+  { id: "srv-6", name: "MQTT Ingestion Engine", category: "Ingestion", status: "Healthy", latencyMs: 1.8, cpuPct: 22, memoryPct: 38, version: "v3.5.0", uptimePct: 99.99, lastIncident: "None in 30 days" },
+  { id: "srv-7", name: "Object Storage Gateway (AWS S3)", category: "Storage", status: "Healthy", latencyMs: 18.0, cpuPct: 9, memoryPct: 19, version: "Cloud Native", uptimePct: 100.0, lastIncident: "None in 120 days" },
+  { id: "srv-8", name: "Background Queue (Celery/RabbitMQ)", category: "Worker", status: "Healthy", latencyMs: 0.0, cpuPct: 15, memoryPct: 29, version: "v4.2.0", uptimePct: 99.97, lastIncident: "Worker scale-up yesterday" },
+  { id: "srv-9", name: "Notification Engine (SMS/Push)", category: "Notification", status: "Healthy", latencyMs: 200.0, cpuPct: 5, memoryPct: 12, version: "v2.1.0", uptimePct: 99.99, lastIncident: "None in 15 days" },
 ];
 
-export const resourceCharts = {
-  cpu: [
-    { time: "00:00", value: 45 }, { time: "04:00", value: 38 },
-    { time: "08:00", value: 65 }, { time: "12:00", value: 72 },
-    { time: "16:00", value: 68 }, { time: "20:00", value: 55 },
-  ],
-  ram: [
-    { time: "00:00", value: 60 }, { time: "04:00", value: 58 },
-    { time: "08:00", value: 62 }, { time: "12:00", value: 75 },
-    { time: "16:00", value: 78 }, { time: "20:00", value: 70 },
-  ],
-  apiTraffic: [
-    { time: "00:00", value: 1200 }, { time: "04:00", value: 800 },
-    { time: "08:00", value: 3500 }, { time: "12:00", value: 5200 },
-    { time: "16:00", value: 4800 }, { time: "20:00", value: 2800 },
-  ]
-};
-
-export const superAdminCustomers = [
-  { id: "c-001", name: "Reliance Jio", orgId: "org-001", plan: "Enterprise Unlimited", sites: 4250, status: "Active", provisioned: "2023-01-15", mrr: "$12,500" },
-  { id: "c-002", name: "Bharti Airtel", orgId: "org-002", plan: "Enterprise Pro", sites: 3820, status: "Active", provisioned: "2023-02-10", mrr: "$11,200" },
-  { id: "c-003", name: "Vodafone Idea", orgId: "org-003", plan: "Enterprise Pro", sites: 2150, status: "Active", provisioned: "2023-04-22", mrr: "$8,600" },
-  { id: "c-004", name: "BSNL", orgId: "org-004", plan: "Government Standard", sites: 5840, status: "Active", provisioned: "2024-01-05", mrr: "$14,000" },
-  { id: "c-005", name: "Tata Teleservices", orgId: "org-005", plan: "Enterprise Plus", sites: 1120, status: "Suspended", provisioned: "2023-06-18", mrr: "$0" },
-  { id: "c-006", name: "MTS India", orgId: "org-006", plan: "Trial", sites: 45, status: "Active", provisioned: "2026-06-01", mrr: "$0" },
+export const platformActivityLog: ActivityLogItem[] = [
+  { id: "act-101", timestamp: "10 mins ago", operator: "System Administrator (Arjun M.)", action: "Customer Upgrade", category: "Billing", severity: "SUCCESS", details: "Upgraded Bharti Airtel to Enterprise Unlimited Tier." },
+  { id: "act-102", timestamp: "25 mins ago", operator: "Automated Backup Job", action: "Database Backup Completed", category: "Backup", severity: "SUCCESS", details: "PostgreSQL snapshot pg_dump_20260703_0900.sql (18.4 GB) saved to S3." },
+  { id: "act-103", timestamp: "1 hour ago", operator: "DevOps Bot", action: "Redis Cluster Restart", category: "Infrastructure", severity: "INFO", details: "Completed graceful rolling restart of Redis Cache node-03." },
+  { id: "act-104", timestamp: "2 hours ago", operator: "System Administrator (Arjun M.)", action: "Security Patch Installed", category: "Security", severity: "SUCCESS", details: "Applied CVE-2026-8812 patch to API Gateway nodes." },
+  { id: "act-105", timestamp: "4 hours ago", operator: "Automated License Manager", action: "Customer License Renewed", category: "Billing", severity: "SUCCESS", details: "Reliance Jio 12-month license auto-renewed (₹1.20 Cr)." },
+  { id: "act-106", timestamp: "6 hours ago", operator: "Security Engine", action: "IP Blocked", category: "Security", severity: "WARNING", details: "Automatically blocked IP 185.220.101.45 after 50 failed API auth attempts." },
 ];
 
-export const superAdminOrganizations = [
-  { id: "org-001", name: "Jio Platforms Ltd", type: "Telecom Operator", region: "India", billingEmail: "billing@jio.com", customers: 1, status: "Active" },
-  { id: "org-002", name: "Bharti Enterprises", type: "Telecom Operator", region: "India", billingEmail: "finance@airtel.com", customers: 2, status: "Active" },
-  { id: "org-003", name: "Aditya Birla Group", type: "Telecom Operator", region: "India", billingEmail: "accounts@vodafoneidea.com", customers: 1, status: "Active" },
-  { id: "org-004", name: "Government of India", type: "Public Sector", region: "India", billingEmail: "telecom.finance@gov.in", customers: 3, status: "Active" },
+export const pendingActions: PendingActionItem[] = [
+  { id: "pa-1", title: "Approve Storage Allocation Expansion", category: "Infrastructure", priority: "HIGH", details: "Reliance Jio requested an additional 10 TB S3 telemetry object storage.", impact: "Prevent telemetry ingestion drops", actionLabel: "Approve 10 TB Allocation" },
+  { id: "pa-2", title: "Review Expiring Customer License", category: "Billing", priority: "MEDIUM", details: "Vodafone Idea 1000-site enterprise tier expires in 5 days.", impact: "Maintain uninterrupted customer monitoring", actionLabel: "Send Renewal Invoice" },
+  { id: "pa-3", title: "Inactive Administrator Security Audit", category: "Security", priority: "LOW", details: "2 customer tenant admin accounts have been inactive for over 90 days.", impact: "Comply with SOC2 security standards", actionLabel: "Revoke Inactive Credentials" },
 ];
 
-export const superAdminPlans = [
-  { id: "plan-1", name: "Trial", maxSites: 50, price: "$0/mo", features: "Basic Monitoring, 7-day retention", status: "Active" },
-  { id: "plan-2", name: "Professional", maxSites: 500, price: "$999/mo", features: "Advanced Monitoring, 30-day retention, Email Alerts", status: "Active" },
-  { id: "plan-3", name: "Enterprise Pro", maxSites: 5000, price: "$4,999/mo", features: "Full Analytics, 1-year retention, SMS/Email Alerts, API Access", status: "Active" },
-  { id: "plan-4", name: "Enterprise Unlimited", maxSites: "Unlimited", price: "Custom", features: "All Features, Custom Integration, Dedicated Support", status: "Active" },
-  { id: "plan-5", name: "Government Standard", maxSites: 10000, price: "Custom", features: "Compliance Reporting, 5-year retention, Audit Logs", status: "Active" },
-];
-
-export const superAdminLicenses = [
-  { id: "lic-001", key: "STMS-ENT-1X49-QW82", org: "Jio Platforms Ltd", plan: "Enterprise Unlimited", issued: "2026-01-01", expiry: "2027-01-01", status: "Valid" },
-  { id: "lic-002", key: "STMS-PRO-8H22-MN55", org: "Bharti Enterprises", plan: "Enterprise Pro", issued: "2026-03-15", expiry: "2027-03-15", status: "Valid" },
-  { id: "lic-003", key: "STMS-TRIAL-0091-ZZ22", org: "MTS India", plan: "Trial", issued: "2026-06-01", expiry: "2026-07-01", status: "Expiring Soon" },
-  { id: "lic-004", key: "STMS-ENT-5521-YY99", org: "Tata Teleservices", plan: "Enterprise Plus", issued: "2025-01-01", expiry: "2026-01-01", status: "Expired" },
-];
-
-export const superAdminPlatformUsers = [
-  { id: "u-001", name: "Arjun Mehta", email: "arjun@indionetworks.com", role: "Super Admin", status: "Active", mfa: true, lastLogin: "10 mins ago" },
-  { id: "u-002", name: "Priya Patel", email: "priya@indionetworks.com", role: "Admin", status: "Active", mfa: true, lastLogin: "2 hours ago" },
-  { id: "u-003", name: "Rohan Gupta", email: "rohan@indionetworks.com", role: "Billing Admin", status: "Active", mfa: true, lastLogin: "1 day ago" },
-  { id: "u-004", name: "Sneha Desai", email: "sneha@indionetworks.com", role: "Support L2", status: "Active", mfa: false, lastLogin: "4 hours ago" },
-  { id: "u-005", name: "Amit Kumar", email: "amit@indionetworks.com", role: "Read Only", status: "Locked", mfa: true, lastLogin: "5 days ago" },
-];
-
-export const superAdminRoles = [
-  { id: "role-1", name: "Super Admin", type: "System", users: 2, permissions: "All (Full Access)" },
-  { id: "role-2", name: "Admin", type: "System", users: 5, permissions: "Manage Tenants, Manage Users, View Settings" },
-  { id: "role-3", name: "Billing Admin", type: "System", users: 3, permissions: "Manage Invoices, Plans, Payments" },
-  { id: "role-4", name: "Support L2", type: "Custom", users: 12, permissions: "View Customers, View Audits, Reset Passwords" },
-  { id: "role-5", name: "Read Only", type: "System", users: 8, permissions: "View Only" },
-];
-
-export const superAdminPermissions = [
-  { id: "perm-1", module: "Tenant Management", action: "Create Customer", description: "Allow provisioning new customer tenants" },
-  { id: "perm-2", module: "Tenant Management", action: "Delete Customer", description: "Allow permanent deletion of customer tenants" },
-  { id: "perm-3", module: "User Management", action: "Reset Password", description: "Allow forcing password reset for any user" },
-  { id: "perm-4", module: "Billing", action: "Issue Credit", description: "Allow issuing credits to customer accounts" },
-  { id: "perm-5", module: "Infrastructure", action: "Restart Services", description: "Allow restarting core STMS microservices" },
-  { id: "perm-6", module: "Security", action: "Manage API Keys", description: "Allow generation and revocation of global API keys" },
+export const aiOperationalRecommendations = [
+  { title: "Customer Storage Pre-allocation Warning", detail: "Reliance Jio telemetry volume growth indicates storage threshold (>85%) will be reached in 4 days. Pre-provision S3 bucket capacity.", actionLabel: "Expand Storage Bucket" },
+  { title: "Redis Cache Hit-Ratio Optimization", detail: "Redis cache hit-ratio dipped to 94.2% during peak 09:00 AM ingestion. Recommend expanding cache key TTL by 15 minutes.", actionLabel: "Tune Cache TTL" },
+  { title: "API Gateway Rate-Limit Review", detail: "API Gateway experienced an 8% latency increase due to high webhooks from Cluster-04. Recommend adjusting rate-limiting rules.", actionLabel: "Optimize Gateway Rules" }
 ];
