@@ -439,24 +439,32 @@ export function Sidebar() {
                       NOC
                     </AvatarFallback>
                   </Avatar>
-                  {!collapsed && (
-                    <div className="ml-2.5 flex flex-col min-w-0 overflow-hidden text-left">
-                      <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate leading-snug group-hover:text-rose-600">
-                        L1 Engineer
-                      </span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-400 truncate leading-none">
-                        Click to Log Out
-                      </span>
-                    </div>
-                  )}
+                  <AnimatePresence initial={false}>
+                    {!collapsed && (
+                      <motion.div
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: "auto" }}
+                        exit={{ opacity: 0, width: 0 }}
+                        transition={{ duration: 0.15 }}
+                        className="flex-1 flex items-center justify-between overflow-hidden"
+                      >
+                        <div className="ml-2.5 flex flex-col min-w-0 overflow-hidden text-left">
+                          <span className="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate leading-snug group-hover:text-rose-600">
+                            Reliance Jio
+                          </span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-400 truncate leading-none">
+                            Customer
+                          </span>
+                        </div>
+                        <LogOut className="w-3.5 h-3.5 text-slate-400 group-hover:text-rose-600 transition-colors shrink-0 ml-2" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-                {!collapsed && (
-                  <LogOut className="w-3.5 h-3.5 text-slate-400 group-hover:text-rose-600 transition-colors" />
-                )}
               </button>
             </TooltipTrigger>
             <TooltipContent side="right" className="font-medium text-xs">
-              Log Out (L1 Engineer)
+              Log Out (Customer)
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

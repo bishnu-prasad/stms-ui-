@@ -10,9 +10,10 @@ interface VendorDataTableProps<T> {
   columns: Column<T>[];
   data: T[];
   emptyMessage?: string;
+  onRowClick?: (row: T) => void;
 }
 
-export function VendorDataTable<T>({ columns, data, emptyMessage = "No records available." }: VendorDataTableProps<T>) {
+export function VendorDataTable<T>({ columns, data, emptyMessage = "No records available.", onRowClick }: VendorDataTableProps<T>) {
   if (!data || data.length === 0) {
     return (
       <div className="py-12 text-center text-slate-400 text-sm font-medium">
@@ -38,7 +39,11 @@ export function VendorDataTable<T>({ columns, data, emptyMessage = "No records a
         </thead>
         <tbody className="divide-y divide-slate-100">
           {data.map((row, i) => (
-            <tr key={i} className="hover:bg-slate-50/60 transition-colors">
+            <tr 
+              key={i} 
+              className={`transition-colors ${onRowClick ? "hover:bg-slate-50/60 cursor-pointer" : "hover:bg-slate-50/60"}`}
+              onClick={() => onRowClick && onRowClick(row)}
+            >
               {columns.map((col, j) => (
                 <td 
                   key={j}

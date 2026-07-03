@@ -67,13 +67,13 @@ export function OwnerSidebar() {
               className="overflow-hidden ml-2.5 whitespace-nowrap"
             >
               <div className="text-[13px] font-bold text-slate-200 tracking-tight leading-none">
-                STMS Admin
+                Platform Owner
               </div>
               <div
                 className="text-[10px] font-semibold mt-0.5"
                 style={{ color: "#475569" }}
               >
-                Platform Console
+
               </div>
             </motion.div>
           )}
@@ -196,7 +196,7 @@ export function OwnerSidebar() {
                       <div className="min-w-0">
                         <div className="text-[12px] font-semibold text-slate-300 truncate">Arjun Mehta</div>
                         <div className="text-[10px] truncate" style={{ color: "#475569" }}>
-                          Super Admin
+
                         </div>
                       </div>
                       <LogOut className="w-3.5 h-3.5 shrink-0 ml-2" />

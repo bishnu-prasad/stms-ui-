@@ -63,7 +63,7 @@ export function Header() {
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col items-start leading-none">
-              <span className="text-xs font-bold text-foreground">L1 Engineer</span>
+              <span className="text-xs font-bold text-foreground">Reliance Jio</span>
               <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Production</span>
             </div>
             <ChevronDown className="w-4 h-4 text-muted-foreground ml-1" />
@@ -72,7 +72,7 @@ export function Header() {
           {isProfileOpen && (
             <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-card border border-slate-200 dark:border-border rounded-xl shadow-xl z-50 py-1.5 text-xs">
               <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800">
-                <span className="block font-bold text-slate-900 dark:text-slate-100">L1 Engineer</span>
+                <span className="block font-bold text-slate-900 dark:text-slate-100">Reliance Jio</span>
                 <span className="block text-[10px] font-mono text-slate-400">admin@indionetworks.com</span>
               </div>
               <button
