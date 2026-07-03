@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { ImpersonationProvider } from "@/contexts/ImpersonationContext";
 import { Layout } from "@/components/Layout";
 import { OwnerLayout } from "@/owner/layout/OwnerLayout";
 import { SuperAdminLayout } from "@/super-admin/layout/SuperAdminLayout";
@@ -350,7 +351,9 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <AppRouter />
+            <ImpersonationProvider>
+              <AppRouter />
+            </ImpersonationProvider>
           </WouterRouter>
           <Toaster />
         </TooltipProvider>

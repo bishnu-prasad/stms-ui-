@@ -13,9 +13,13 @@ import {
   kpiStats, customerHealth, alarmCategories, availabilityData,
   criticalSitesData, recentActivities
 } from "./DashboardData";
+import { CustomerDrawer } from "../../components/CustomerDrawer";
+import { customers } from "../../data/operationalMockData";
 
 export default function SuperAdminDashboard() {
   const [activeFilter, setActiveFilter] = useState("All");
+
+  const [selectedCustomer, setSelectedCustomer] = useState<typeof customers[0] | null>(null);
 
   return (
     <div className="space-y-6 pb-12">
@@ -155,9 +159,15 @@ export default function SuperAdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                  {customerHealth.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{c.name}</td>
+                  {customerHealth.map((c) => {
+                    const fullCustomerInfo = customers.find(cust => cust.name === c.name);
+                    return (
+                      <tr 
+                        key={c.id} 
+                        onClick={() => fullCustomerInfo && setSelectedCustomer(fullCustomerInfo)}
+                        className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer ${selectedCustomer?.name === c.name ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
+                      >
+                        <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{c.name}</td>
                       <td className="px-4 py-3 text-center font-mono">
                         <span className="text-slate-700 dark:text-slate-300">{c.totalSites}</span>
                         <span className="text-slate-400 mx-1">|</span>
@@ -186,7 +196,8 @@ export default function SuperAdminDashboard() {
                         <button className="text-blue-600 font-bold hover:underline">Monitor</button>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -417,6 +428,11 @@ export default function SuperAdminDashboard() {
 
         </div>
       </div>
+
+      <CustomerDrawer 
+        customer={selectedCustomer as any} 
+        onClose={() => setSelectedCustomer(null)} 
+      />
     </div>
   );
 }
