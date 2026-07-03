@@ -21,24 +21,30 @@ interface ImpersonationContextType {
   impersonatedCustomer: CustomerType | null;
   startImpersonation: (customer: CustomerType) => void;
   stopImpersonation: () => void;
+
+  isImpersonatingSuperAdmin: boolean;
+  impersonatedSuperAdminCustomer: CustomerType | null;
+  startSuperAdminImpersonation: (customer: CustomerType) => void;
+  stopSuperAdminImpersonation: () => void;
 }
 
 const ImpersonationContext = createContext<ImpersonationContextType | undefined>(undefined);
 
 export function ImpersonationProvider({ children }: { children: ReactNode }) {
+  // Existing Customer Portal Impersonation
   const [isImpersonating, setIsImpersonating] = useState(false);
   const [impersonatedCustomer, setImpersonatedCustomer] = useState<CustomerType | null>(null);
+  
+  // New Super Admin Portal Impersonation
+  const [isImpersonatingSuperAdmin, setIsImpersonatingSuperAdmin] = useState(false);
+  const [impersonatedSuperAdminCustomer, setImpersonatedSuperAdminCustomer] = useState<CustomerType | null>(null);
+
   const [, setLocation] = useLocation();
 
   const startImpersonation = (customer: CustomerType) => {
-    // 1. Audit Log 
     console.log(`[AUDIT] Super Admin opened Customer Workspace: ${customer.name} at ${new Date().toISOString()}`);
-    
-    // 2. Set State
     setImpersonatedCustomer(customer);
     setIsImpersonating(true);
-    
-    // 3. Route to Customer Portal
     setLocation("/analytics");
   };
 
@@ -46,16 +52,32 @@ export function ImpersonationProvider({ children }: { children: ReactNode }) {
     if (impersonatedCustomer) {
       console.log(`[AUDIT] Super Admin exited Customer Workspace: ${impersonatedCustomer.name} at ${new Date().toISOString()}`);
     }
-    
     setIsImpersonating(false);
     setImpersonatedCustomer(null);
-    
-    // Route back to Super Admin Dashboard
     setLocation("/super-admin/customers");
   };
 
+  const startSuperAdminImpersonation = (customer: CustomerType) => {
+    console.log(`[AUDIT] Platform Owner opened Super Admin Workspace for: ${customer.name} at ${new Date().toISOString()}`);
+    setImpersonatedSuperAdminCustomer(customer);
+    setIsImpersonatingSuperAdmin(true);
+    setLocation("/super-admin/dashboard");
+  };
+
+  const stopSuperAdminImpersonation = () => {
+    if (impersonatedSuperAdminCustomer) {
+      console.log(`[AUDIT] Platform Owner exited Super Admin Workspace for: ${impersonatedSuperAdminCustomer.name} at ${new Date().toISOString()}`);
+    }
+    setIsImpersonatingSuperAdmin(false);
+    setImpersonatedSuperAdminCustomer(null);
+    setLocation("/owner/customers");
+  };
+
   return (
-    <ImpersonationContext.Provider value={{ isImpersonating, impersonatedCustomer, startImpersonation, stopImpersonation }}>
+    <ImpersonationContext.Provider value={{ 
+      isImpersonating, impersonatedCustomer, startImpersonation, stopImpersonation,
+      isImpersonatingSuperAdmin, impersonatedSuperAdminCustomer, startSuperAdminImpersonation, stopSuperAdminImpersonation
+    }}>
       {children}
     </ImpersonationContext.Provider>
   );

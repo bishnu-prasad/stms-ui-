@@ -66,7 +66,7 @@ export default function OwnerSites() {
         <div className="bg-white rounded-2xl overflow-hidden" style={{ border: "1px solid #E2E8F0" }}>
           <table className="w-full text-xs">
             <thead style={{ background: "#F8FAFC", borderBottom: "1px solid #E2E8F0" }}>
-              <tr>{["Site Name", "Customer", "Region", "Circle", "Status", "Devices", "Alarms", "Coordinates"].map((h) => (
+              <tr>{["Site Name", "Customer", "Devices", "Alarms", "Coordinates"].map((h) => (
                 <th key={h} className="text-left px-5 py-3 font-semibold text-slate-400 uppercase tracking-wide text-[10px]">{h}</th>
               ))}</tr>
             </thead>
@@ -75,9 +75,6 @@ export default function OwnerSites() {
                 <tr key={s.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-5 py-3 font-semibold text-slate-800">{s.name}</td>
                   <td className="px-5 py-3 text-slate-500">{s.customer}</td>
-                  <td className="px-5 py-3 text-slate-600">{s.region}</td>
-                  <td className="px-5 py-3 text-slate-500">{s.circle}</td>
-                  <td className="px-5 py-3"><span className="flex items-center gap-1.5 font-semibold" style={{ color: statusColor[s.status] }}><span className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor[s.status] }} />{s.status}</span></td>
                   <td className="px-5 py-3 tabular-nums text-slate-700">{s.devices}</td>
                   <td className="px-5 py-3 font-bold" style={{ color: s.alarms > 3 ? "#EF4444" : s.alarms > 0 ? "#F59E0B" : "#10B981" }}>{s.alarms}</td>
                   <td className="px-5 py-3 font-mono text-[10px] text-slate-400">{s.lat}, {s.lng}</td>

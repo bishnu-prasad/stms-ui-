@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Filter, ChevronRight, Users, Building2, TrendingUp, ArrowUpRight, X } from "lucide-react";
+import { Search, Filter, ChevronRight, Users, Building2, TrendingUp, ArrowUpRight, X, LogIn } from "lucide-react";
 import { customers, Customer } from "../../data/ownerMockData";
+import { useImpersonation } from "@/contexts/ImpersonationContext";
 
 type Tab = "all" | "health" | "subscriptions" | "plans";
 
@@ -71,6 +72,24 @@ function CustomerDetail({ c, onClose }: { c: Customer; onClose: () => void }) {
   const healthColor = { Healthy: "#10B981", Warning: "#F59E0B", Critical: "#EF4444", Offline: "#94A3B8" }[c.health];
   const [activeTab, setActiveTab] = useState("overview");
   const tabs = ["overview", "sites", "users", "revenue", "subscription", "invoices", "alarms", "settings"];
+  const { startSuperAdminImpersonation } = useImpersonation();
+
+  const handleOpenWorkspace = () => {
+    startSuperAdminImpersonation({
+      id: c.id,
+      name: c.name,
+      logo: c.logo,
+      region: c.region,
+      status: c.status,
+      totalSites: c.sites,
+      onlineSites: c.healthySites,
+      alarms: c.alarms.critical + c.alarms.major,
+      tickets: Math.floor(c.alarms.critical * 1.5),
+      vendors: 3,
+      admins: 1,
+      plan: c.plan
+    });
+  };
 
   return (
     <motion.div
@@ -109,9 +128,17 @@ function CustomerDetail({ c, onClose }: { c: Customer; onClose: () => void }) {
               </div>
             </div>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center cursor-pointer">
-            <X className="w-4 h-4 text-slate-500" />
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={handleOpenWorkspace}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95"
+            >
+              <LogIn className="w-3.5 h-3.5 text-indigo-400" /> Open Workspace
+            </button>
+            <button onClick={onClose} className="w-8 h-8 rounded-lg hover:bg-slate-100 flex items-center justify-center cursor-pointer">
+              <X className="w-4 h-4 text-slate-500" />
+            </button>
+          </div>
         </div>
 
         {/* Tabs */}
