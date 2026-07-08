@@ -16,6 +16,41 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
+  const themeConfig = {
+    admin: {
+      primary: "text-indigo-600 hover:text-indigo-850",
+      button: "bg-indigo-600 hover:bg-indigo-700 focus-visible:ring-indigo-500",
+      badge: "bg-indigo-50 text-indigo-700 border-indigo-150",
+      checkbox: "text-indigo-600 focus:ring-indigo-500",
+    },
+    superadmin: {
+      primary: "text-slate-700 hover:text-slate-900",
+      button: "bg-slate-700 hover:bg-slate-800 focus-visible:ring-slate-500",
+      badge: "bg-slate-50 text-slate-850 border-slate-200",
+      checkbox: "text-slate-700 focus:ring-slate-550",
+    },
+    customer: {
+      primary: "text-blue-600 hover:text-blue-800",
+      button: "bg-blue-600 hover:bg-blue-700 focus-visible:ring-blue-500",
+      badge: "bg-blue-50 text-blue-700 border-blue-100",
+      checkbox: "text-blue-600 focus:ring-blue-500",
+    },
+    vendor: {
+      primary: "text-teal-600 hover:text-teal-800",
+      button: "bg-teal-600 hover:bg-teal-700 focus-visible:ring-teal-500",
+      badge: "bg-teal-50 text-teal-700 border-teal-100",
+      checkbox: "text-teal-600 focus:ring-teal-500",
+    },
+    engineer: {
+      primary: "text-orange-600 hover:text-orange-850",
+      button: "bg-orange-600 hover:bg-orange-700 focus-visible:ring-orange-500",
+      badge: "bg-orange-50 text-orange-700 border-orange-100",
+      checkbox: "text-orange-600 focus:ring-orange-500",
+    },
+  };
+
+  const currentTheme = accountType ? themeConfig[accountType] : themeConfig.customer;
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -51,58 +86,14 @@ export default function Login() {
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-[120px] pointer-events-none" />
 
-        {/* Tower Background Graphic Silhouette - Dark Solid Silhouette Matching stms-ui.vercel.app */}
-        <div className="absolute top-0 bottom-0 right-10 xl:right-28 w-80 pointer-events-none flex items-center justify-center opacity-70 select-none">
-          <svg viewBox="0 0 300 800" className="w-full h-full" fill="none">
-            {/* Red Beacon Light at Top */}
-            <circle cx="150" cy="50" r="4" fill="#EF4444" className="animate-pulse" />
-
-            {/* Top Antenna Mount Structure */}
-            <rect x="146" y="55" width="8" height="40" fill="#04060E" stroke="#0E1626" strokeWidth="1.5" />
-            <rect x="125" y="70" width="50" height="4" fill="#04060E" stroke="#0E1626" strokeWidth="1.5" />
-            <rect x="115" y="88" width="70" height="4" fill="#04060E" stroke="#0E1626" strokeWidth="1.5" />
-
-            {/* Panel Antennas */}
-            <rect x="120" y="60" width="8" height="26" rx="2" fill="#030409" stroke="#0E1626" strokeWidth="1.5" />
-            <rect x="146" y="60" width="8" height="26" rx="2" fill="#030409" stroke="#0E1626" strokeWidth="1.5" />
-            <rect x="172" y="60" width="8" height="26" rx="2" fill="#030409" stroke="#0E1626" strokeWidth="1.5" />
-
-            {/* Tower Main Legs */}
-            <line x1="150" y1="90" x2="40" y2="780" stroke="#0A111F" strokeWidth="6" />
-            <line x1="150" y1="90" x2="260" y2="780" stroke="#0A111F" strokeWidth="6" />
-            <line x1="150" y1="90" x2="150" y2="780" stroke="#060A14" strokeWidth="3" strokeDasharray="8 6" opacity="0.6" />
-
-            {/* Left Microwave Dish - Solid Dark Circle */}
-            <circle cx="100" cy="260" r="32" fill="#03050C" stroke="#0B1322" strokeWidth="4" />
-            <circle cx="100" cy="260" r="24" fill="#03050C" stroke="#0A101C" strokeWidth="2" opacity="0.7" />
-            <circle cx="100" cy="260" r="6" fill="#09101F" />
-            <line x1="100" y1="260" x2="135" y2="260" stroke="#0A111F" strokeWidth="3" />
-
-            {/* Right Microwave Dish - Solid Dark Circle */}
-            <circle cx="200" cy="290" r="32" fill="#03050C" stroke="#0B1322" strokeWidth="4" />
-            <circle cx="200" cy="290" r="24" fill="#03050C" stroke="#0A101C" strokeWidth="2" opacity="0.7" />
-            <circle cx="200" cy="290" r="6" fill="#09101F" />
-            <line x1="200" y1="290" x2="165" y2="290" stroke="#0A111F" strokeWidth="3" />
-
-            {/* Cross Lattice Bracing Sections */}
-            {[
-              { y1: 120, y2: 160, left1: 145, right1: 155, left2: 139, right2: 161 },
-              { y1: 160, y2: 210, left1: 139, right1: 161, left2: 131, right2: 169 },
-              { y1: 210, y2: 270, left1: 131, right1: 169, left2: 122, right2: 178 },
-              { y1: 270, y2: 340, left1: 122, right1: 178, left2: 111, right2: 189 },
-              { y1: 340, y2: 420, left1: 111, right1: 189, left2: 98, right2: 202 },
-              { y1: 420, y2: 510, left1: 98, right1: 202, left2: 84, right2: 216 },
-              { y1: 510, y2: 600, left1: 84, right1: 216, left2: 70, right2: 230 },
-              { y1: 600, y2: 700, left1: 70, right1: 230, left2: 54, right2: 246 },
-              { y1: 700, y2: 780, left1: 54, right1: 246, left2: 40, right2: 260 },
-            ].map((section, idx) => (
-              <g key={idx}>
-                <line x1={section.left2} y1={section.y2} x2={section.right2} y2={section.y2} stroke="#0A111F" strokeWidth="3" />
-                <line x1={section.left1} y1={section.y1} x2={section.right2} y2={section.y2} stroke="#070C17" strokeWidth="2" />
-                <line x1={section.right1} y1={section.y1} x2={section.left2} y2={section.y2} stroke="#070C17" strokeWidth="2" />
-              </g>
-            ))}
-          </svg>
+        {/* Tower Background Graphic Silhouette replaced with custom user photo */}
+        <div className="absolute inset-0 pointer-events-none z-0">
+          <img
+            src="/login-bg.png"
+            alt="Telecom Tower Background"
+            className="w-full h-full object-cover opacity-55"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#090D16]/80 via-[#090D16]/20 to-[#090D16]/50" />
         </div>
 
         {/* Top Header Logo */}
@@ -344,7 +335,7 @@ export default function Login() {
                   >
                     ← Back to Workspaces
                   </button>
-                  <span className="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase bg-blue-50 text-blue-700 border border-blue-100">
+                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full uppercase border ${currentTheme.badge}`}>
                     {accountType} PORTAL
                   </span>
                 </div>
@@ -396,17 +387,17 @@ export default function Login() {
                         type="checkbox"
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
-                        className="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer"
+                        className={`w-4 h-4 rounded border-slate-300 cursor-pointer ${currentTheme.checkbox}`}
                       />
                       Remember login
                     </label>
-                    <a href="#" className="font-semibold text-blue-600 hover:text-blue-800">Forgot password?</a>
+                    <a href="#" className={`font-semibold ${currentTheme.primary}`}>Forgot password?</a>
                   </div>
 
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full h-11 font-bold text-sm rounded-xl text-white bg-blue-600 hover:bg-blue-700 cursor-pointer transition-all shadow-xs"
+                    className={`w-full h-11 font-bold text-sm rounded-xl text-white cursor-pointer transition-all shadow-xs ${currentTheme.button}`}
                   >
                     {isLoading ? (
                       <span className="flex items-center gap-2">

@@ -104,6 +104,20 @@ export default function Config() {
   const [newCatParent, setNewCatParent] = useState("None");
   const [newCatType, setNewCatType] = useState<"main" | "sub">("main");
 
+  // EDIT LOCATION STATE
+  const [isEditLocModalOpen, setIsEditLocModalOpen] = useState(false);
+  const [editingLocId, setEditingLocId] = useState<number | null>(null);
+  const [editLocName, setEditLocName] = useState("");
+  const [editLocType, setEditLocType] = useState<"zone" | "cluster" | "circle">("cluster");
+  const [editLocParent, setEditLocParent] = useState("No Parent (Root Level)");
+
+  // EDIT CATEGORY STATE
+  const [isEditCatModalOpen, setIsEditCatModalOpen] = useState(false);
+  const [editingCatId, setEditingCatId] = useState<number | null>(null);
+  const [editCatName, setEditCatName] = useState("");
+  const [editCatParent, setEditCatParent] = useState("None");
+  const [editCatType, setEditCatType] = useState<"main" | "sub">("main");
+
   useEffect(() => {
     const handleUrlChange = () => {
       const searchParams = new URLSearchParams(window.location.search);
@@ -156,6 +170,64 @@ export default function Config() {
   // DELETE CATEGORY
   const handleDeleteCategory = (id: number) => {
     setCategories(categories.filter((item) => item.id !== id));
+  };
+
+  // EDIT LOCATION HANDLERS
+  const handleOpenEditLocation = (loc: LocationItem) => {
+    setEditingLocId(loc.id);
+    setEditLocName(loc.name);
+    setEditLocType(loc.type);
+    setEditLocParent(loc.parentLocation || "No Parent (Root Level)");
+    setIsEditLocModalOpen(true);
+  };
+
+  const handleSaveEditLocation = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editLocName.trim() || editingLocId === null) return;
+    setLocations(
+      locations.map((loc) =>
+        loc.id === editingLocId
+          ? {
+              ...loc,
+              name: editLocName.trim(),
+              type: editLocType,
+              parentLocation: editLocParent,
+              updatedOn: new Date().toISOString().replace("T", " ").substring(0, 19),
+            }
+          : loc
+      )
+    );
+    setIsEditLocModalOpen(false);
+    setEditingLocId(null);
+  };
+
+  // EDIT CATEGORY HANDLERS
+  const handleOpenEditCategory = (cat: CategoryItem) => {
+    setEditingCatId(cat.id);
+    setEditCatName(cat.name);
+    setEditCatParent(cat.parentCategory);
+    setEditCatType(cat.type);
+    setIsEditCatModalOpen(true);
+  };
+
+  const handleSaveEditCategory = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editCatName.trim() || editingCatId === null) return;
+    setCategories(
+      categories.map((cat) =>
+        cat.id === editingCatId
+          ? {
+              ...cat,
+              name: editCatName.trim(),
+              parentCategory: editCatParent,
+              type: editCatType,
+              updatedOn: new Date().toISOString().replace("T", " ").substring(0, 19),
+            }
+          : cat
+      )
+    );
+    setIsEditCatModalOpen(false);
+    setEditingCatId(null);
   };
 
   // FILTER LOCATIONS
@@ -416,7 +488,12 @@ export default function Config() {
                         </td>
                         <td className="px-5 py-4 text-right">
                           <div className="flex items-center justify-end gap-1">
-                            <Button variant="outline" size="sm" className="h-7 w-7 p-0 text-blue-600">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleOpenEditLocation(loc)}
+                              className="h-7 w-7 p-0 text-blue-600 hover:bg-blue-50"
+                            >
                               <Edit2 className="w-3.5 h-3.5" />
                             </Button>
                             <Button
@@ -577,7 +654,12 @@ export default function Config() {
                       </td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <Button variant="outline" size="sm" className="h-7 w-7 p-0 text-blue-600">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleOpenEditCategory(cat)}
+                            className="h-7 w-7 p-0 text-blue-600 hover:bg-blue-50"
+                          >
                             <Edit2 className="w-3.5 h-3.5" />
                           </Button>
                           <Button
@@ -701,7 +783,7 @@ export default function Config() {
                         return (
                           <button
                             key={type}
-                            type="button; button"
+                            type="button"
                             onClick={() => setNewLocType(type)}
                             className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer capitalize ${
                               isSelected
@@ -863,6 +945,276 @@ export default function Config() {
                 </Button>
                 <Button type="submit" size="sm" className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-lg shadow-xs">
                   Save Category
+                </Button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+      {/* ==================================================================== */}
+      {/* MODAL DIALOG: EDIT LOCATION                                          */}
+      {/* ==================================================================== */}
+      {isEditLocModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-2xl p-6 shadow-xl w-full max-w-3xl"
+          >
+            <div className="flex items-center justify-between mb-5 border-b border-slate-100 dark:border-slate-800 pb-3.5">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                  <MapPin className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="block font-bold">Edit Telemetry Location</span>
+                  <span className="text-[10px] text-slate-400 font-medium block">Update geolocation parameters & hierarchy links</span>
+                </div>
+              </h3>
+              <button
+                onClick={() => setIsEditLocModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md hover:bg-slate-50 dark:hover:bg-slate-900 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditLocation} className="space-y-5 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Col 1: Hierarchy Tree Selector */}
+                <div className="flex flex-col gap-2">
+                  <span className="block font-bold text-slate-600 dark:text-slate-400">
+                    Select Parent Location Hierarchy
+                  </span>
+                  <div className="border border-slate-200/80 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 p-3 max-h-56 overflow-y-auto space-y-1.5 scrollbar-thin">
+                    {[
+                      { id: "root", name: "No Parent (Root Level)", indent: 0, icon: Globe2 },
+                      { id: "india", name: "India", indent: 0, icon: Globe2 },
+                      { id: "mh", name: "Maharashtra", indent: 4, icon: MapPin },
+                      { id: "rj", name: "Rajasthan", indent: 4, icon: MapPin },
+                      { id: "mumbai", name: "Mumbai", indent: 8, icon: Building },
+                      { id: "bangalore", name: "Bangalore", indent: 8, icon: Building },
+                      { id: "up", name: "Uttar Pradesh", indent: 4, icon: MapPin },
+                      { id: "lucknow", name: "Lucknow", indent: 8, icon: Building },
+                      { id: "telangana", name: "Telangana", indent: 4, icon: MapPin },
+                      { id: "hyderabad", name: "Hyderabad", indent: 8, icon: Building },
+                      { id: "jk", name: "Jammu & Kashmir", indent: 4, icon: MapPin }
+                    ].map((loc) => {
+                      const isSelected = editLocParent === loc.name;
+                      return (
+                        <button
+                          key={loc.id}
+                          type="button"
+                          onClick={() => setEditLocParent(loc.name)}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-all cursor-pointer border ${
+                            isSelected
+                              ? "bg-blue-50/80 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/40 font-bold"
+                              : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-850 text-slate-600 dark:text-slate-300 hover:bg-slate-100"
+                          }`}
+                          style={{ marginLeft: `${loc.indent * 4}px`, width: `calc(100% - ${loc.indent * 4}px)` }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <loc.icon className={`w-3.5 h-3.5 ${isSelected ? "text-blue-600" : "text-slate-400"}`} />
+                            <span className="text-xs">{loc.name}</span>
+                          </div>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-blue-600" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="text-[10px] text-slate-400/80 mt-1">
+                    Selected Parent: <span className="font-bold text-slate-600 dark:text-slate-350">{editLocParent}</span>
+                  </div>
+                </div>
+
+                {/* Col 2: Inputs */}
+                <div className="space-y-4 col-span-1">
+                  <div>
+                    <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1.5">
+                      Location Name
+                    </label>
+                    <Input
+                      required
+                      placeholder="e.g. Jaipur, Zone 4, NCR West"
+                      value={editLocName}
+                      onChange={(e) => setEditLocName(e.target.value)}
+                      className="h-10 text-xs rounded-xl bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-600 dark:text-slate-400 mb-2">
+                      Hierarchy Type
+                    </label>
+                    <div className="grid grid-cols-3 gap-1 bg-slate-50 dark:bg-slate-900/60 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                      {(["zone", "cluster", "circle"] as const).map((type) => {
+                        const isSelected = editLocType === type;
+                        return (
+                          <button
+                            key={type}
+                            type="button"
+                            onClick={() => setEditLocType(type)}
+                            className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer capitalize ${
+                              isSelected
+                                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
+                            }`}
+                          >
+                            {type}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditLocModalOpen(false)}
+                  className="rounded-lg text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-xs">
+                  Update Location
+                </Button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* MODAL DIALOG: EDIT CATEGORY                                          */}
+      {/* ==================================================================== */}
+      {isEditCatModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-2xl p-6 shadow-xl w-full max-w-3xl"
+          >
+            <div className="flex items-center justify-between mb-5 border-b border-slate-100 dark:border-slate-800 pb-3.5">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                  <Layers className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="block font-bold">Edit Taxonomy Category</span>
+                  <span className="text-[10px] text-slate-400 font-medium block">Configure categorization filters & taxonomy links</span>
+                </div>
+              </h3>
+              <button
+                onClick={() => setIsEditCatModalOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md hover:bg-slate-50 dark:hover:bg-slate-900 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditCategory} className="space-y-5 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Col 1: Taxonomy Parent Category Selector */}
+                <div className="flex flex-col gap-2">
+                  <span className="block font-bold text-slate-600 dark:text-slate-400">
+                    Select Taxonomy Parent Category
+                  </span>
+                  <div className="border border-slate-200/80 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 p-3 max-h-56 overflow-y-auto space-y-1.5 scrollbar-thin">
+                    {[
+                      { id: "none", name: "None (Main Category)" },
+                      { id: "network", name: "Network" },
+                      { id: "fiber", name: "Fiber" },
+                      { id: "atm", name: "ATM" },
+                      { id: "eco", name: "Eco" },
+                      { id: "main", name: "Main" },
+                      { id: "category", name: "Category" }
+                    ].map((cat) => {
+                      const isSelected = editCatParent === cat.name;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setEditCatParent(cat.name)}
+                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left transition-all cursor-pointer border ${
+                            isSelected
+                              ? "bg-purple-50/80 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-900/40 font-bold"
+                              : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-850 text-slate-600 dark:text-slate-300 hover:bg-slate-100"
+                          }`}
+                        >
+                          <span className="text-xs font-semibold">{cat.name}</span>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-purple-600" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="text-[10px] text-slate-400/80 mt-1">
+                    Selected Parent: <span className="font-bold text-purple-600 dark:text-purple-400">{editCatParent}</span>
+                  </div>
+                </div>
+
+                {/* Col 2: Form Inputs */}
+                <div className="space-y-4 col-span-1">
+                  <div>
+                    <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1.5">
+                      Category Name
+                    </label>
+                    <Input
+                      required
+                      placeholder="e.g. Rectifier, DG Power, Transmission"
+                      value={editCatName}
+                      onChange={(e) => setEditCatName(e.target.value)}
+                      className="h-10 text-xs rounded-xl bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-600 dark:text-slate-400 mb-2">
+                      Taxonomy Category Type
+                    </label>
+                    <div className="grid grid-cols-2 gap-1 bg-slate-50 dark:bg-slate-900/60 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                      {[
+                        { value: "main", label: "Main Category" },
+                        { value: "sub", label: "Sub Category" }
+                      ].map((t) => {
+                        const isSelected = editCatType === t.value;
+                        return (
+                          <button
+                            key={t.value}
+                            type="button"
+                            onClick={() => setEditCatType(t.value as any)}
+                            className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                              isSelected
+                                ? "bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-xs"
+                                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
+                            }`}
+                          >
+                            {t.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditCatModalOpen(false)}
+                  className="rounded-lg text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" size="sm" className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-lg shadow-xs">
+                  Update Category
                 </Button>
               </div>
             </form>
