@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -192,6 +193,7 @@ const configHistory = [
 ];
 
 export default function Sites() {
+  const [, setLocation] = useLocation();
   const [sites, setSites] = useState<SiteAssetRecord[]>(initialSitesList);
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -729,7 +731,10 @@ export default function Sites() {
                     <td className="px-5 py-4 text-right">
                       <Button
                         size="sm"
-                        className="h-8 px-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 text-white font-bold text-xs shadow-2xs gap-1"
+                        className="h-8 px-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 text-white font-bold text-xs shadow-2xs gap-1 cursor-pointer"
+                        onClick={() => {
+                          setLocation(`/monitor?inspect=${site.id}&tab=settings`);
+                        }}
                       >
                         <span>Inspect</span>
                         <ChevronRight className="w-3.5 h-3.5" />

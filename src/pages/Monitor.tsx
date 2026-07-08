@@ -557,6 +557,7 @@ export default function Monitor() {
   const handleBackToList = () => {
     const params = new URLSearchParams(window.location.search);
     params.delete("inspect");
+    params.delete("tab");
     setLocation(window.location.pathname + "?" + params.toString());
     setInspectingSiteId(null);
   };
@@ -620,7 +621,41 @@ export default function Monitor() {
     );
   });
 
-  const inspectedSite = mockFleetData.find((s) => s.id === inspectingSiteId);
+  let inspectedSite = mockFleetData.find((s) => s.id === inspectingSiteId);
+
+  if (!inspectedSite && inspectingSiteId) {
+    const nameMap: Record<string, string> = {
+      "0000459507": "KATRAJ TUNNEL II",
+      "0000490457": "ACHALPUR",
+      "0000508663": "JODHPUR ENGG COLLEGE",
+      "0000508711": "RUDAWAL",
+      "0000509489": "MALIKPUR",
+      "0000530087": "ITBP JODHPUR COW",
+      "0000534730": "PALI_KAMLAGRESH COLONY",
+      "0000534855": "UDPR-PREM NAGAR",
+      "0000581861": "SATKHANDA",
+      "0000545111": "Smart City"
+    };
+
+    inspectedSite = {
+      id: inspectingSiteId,
+      name: nameMap[inspectingSiteId] || `SITE-${inspectingSiteId}`,
+      equipment: "SPS Unit & SMPS 48V",
+      vendor: "Delta",
+      status: "ONLINE",
+      reported: "45s ago",
+      source: "Mains",
+      mainsHours: 120.4,
+      mainsPct: 90.0,
+      dgHours: 8.5,
+      dgPct: 6.5,
+      battHours: 4.8,
+      battPct: 3.5,
+      score: 96,
+      circle: "Rajasthan",
+      loadKw: "2.8 kW"
+    };
+  }
 
   if (inspectedSite) {
     return (

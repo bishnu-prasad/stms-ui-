@@ -40,6 +40,12 @@ import {
   Edit,
   Trash,
   Check,
+  ToggleLeft,
+  ToggleRight,
+  Search,
+  ChevronDown,
+  TrendingUp,
+  BarChart2,
 } from "lucide-react";
 import {
   AreaChart,
@@ -100,12 +106,54 @@ interface SiteDashboardProps {
 export default function SiteDashboard({ site, onBack }: SiteDashboardProps) {
   const [activeTab, setActiveTab] = useState<"dashboard" | "alarms" | "gallery" | "inventory" | "report" | "settings">("dashboard");
   const [mapMounted, setMapMounted] = useState(false);
+  const [settingsMapMounted, setSettingsMapMounted] = useState(false);
   const [activeChartMetric, setActiveChartMetric] = useState<"power" | "current" | "voltage">("power");
   const [galleryLightboxImage, setGalleryLightboxImage] = useState<string | null>(null);
+  const [energySubTab, setEnergySubTab] = useState<"data" | "trend">("data");
+  const [smpsDetailOpen, setSmpsDetailOpen] = useState(false);
+  const [smpsTab, setSmpsTab] = useState<"overview" | "trends">("overview");
+  const [globalSiteEnabled, setGlobalSiteEnabled] = useState(true);
+
+  // Initialize and sync tab state with URL query parameter
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabFromUrl = params.get("tab") as any;
+    const validTabs = ["dashboard", "alarms", "gallery", "inventory", "report", "settings"];
+    if (validTabs.includes(tabFromUrl) && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("tab") !== activeTab) {
+      params.set("tab", activeTab);
+      window.history.replaceState({}, "", window.location.pathname + "?" + params.toString());
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const params = new URLSearchParams(window.location.search);
+      const tabFromUrl = params.get("tab") as any;
+      const validTabs = ["dashboard", "alarms", "gallery", "inventory", "report", "settings"];
+      if (validTabs.includes(tabFromUrl) && tabFromUrl !== activeTab) {
+        setActiveTab(tabFromUrl);
+      }
+    };
+    window.addEventListener("popstate", handleUrlChange);
+    return () => window.removeEventListener("popstate", handleUrlChange);
+  }, [activeTab]);
 
   useEffect(() => {
     setMapMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (activeTab === "settings") {
+      setTimeout(() => setSettingsMapMounted(true), 100);
+    }
+  }, [activeTab]);
 
   // Reproducible site stats & telemetry details based on Site ID
   const seed = parseInt(site.id) || 12345;
@@ -390,8 +438,366 @@ export default function SiteDashboard({ site, onBack }: SiteDashboardProps) {
         })}
       </div>
 
+      {/* ==================== SMPS DETAIL DASHBOARD ==================== */}
+      {smpsDetailOpen && (() => {
+        const vendor = site.vendor !== "N/A" ? site.vendor : "Delta";
+        const hours = seed % 100 + 400;
+        const dgRunHrs = (site.dgHours + 57.3).toFixed(1);
+        const mainsRunHrs = (site.mainsHours + 3349.7).toFixed(1);
+        const battRunHrs = (site.battHours + 1598.6).toFixed(1);
+        const loadCurrent = (60.1 + seed % 10).toFixed(1);
+        const battTemp = seed % 5;
+        const serialNo = `VT-${90000000 + seed}`;
+        const lastReported = new Date().toLocaleString("sv-SE").replace("T", " ").slice(0, 16);
+
+        // Trend data
+        const pts = Array.from({length: 24}, (_,i) => i);
+        const battVoltageData = pts.map(i => ({ t: `${String(i).padStart(2,"0")}:00`, V: (parseFloat(batteryVoltage) + Math.sin(i * 0.6) * 2.5 + Math.cos(i * 0.3) * 1.2).toFixed(1) }));
+        const energyData = pts.map(i => ({ t: `${String(i).padStart(2,"0")}:00`, kWh: (1.2 + Math.sin(i * 0.4) * 0.8 + Math.random() * 0.2).toFixed(2) }));
+        const powerData = pts.map(i => ({ t: `${String(i).padStart(2,"0")}:00`, L1: (1200 + Math.sin(i * 0.5) * 300 + Math.random() * 150).toFixed(0), L2: (800 + Math.cos(i * 0.7) * 200 + Math.random() * 100).toFixed(0) }));
+        const tempData = pts.map(i => ({ t: `${String(i).padStart(2,"0")}:00`, C: (24 + Math.sin(i * 0.4) * 4 + Math.random() * 1).toFixed(1) }));
+
+        const tooltipStyle = { backgroundColor: "rgba(15,23,42,0.97)", borderRadius: "10px", border: "none", color: "white", fontSize: "11px", padding: "10px 14px" };
+
+        return (
+          <div className="flex flex-col gap-6 pb-12">
+            {/* Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-5">
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={() => setSmpsDetailOpen(false)}
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 rounded-xl border-slate-200/80 dark:border-slate-800 shadow-xs transition-transform hover:-translate-x-0.5 cursor-pointer"
+                >
+                  <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+                </Button>
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                    <span className="cursor-pointer hover:text-blue-600" onClick={() => setSmpsDetailOpen(false)}>Dashboard</span>
+                    <span>&gt;</span>
+                    <span className="text-slate-800 dark:text-slate-200 font-bold">SMPS Equipment</span>
+                  </div>
+                  <div className="flex items-center gap-3 mt-1">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-md">
+                      <Zap className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-foreground">{vendor} Dashboard</h1>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs font-mono text-slate-400">Slave ID: 1</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">ONLINE</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" className="h-9 gap-1.5 rounded-lg border-slate-200/80 dark:border-slate-800 font-semibold cursor-pointer">
+                  <Download className="w-4 h-4 text-slate-500" /> Export CSV
+                </Button>
+                <Button
+                  onClick={() => setSmpsTab(smpsTab === "overview" ? "trends" : "overview")}
+                  size="sm"
+                  className={`h-9 gap-1.5 rounded-lg font-semibold cursor-pointer ${smpsTab === "trends" ? "bg-violet-600 hover:bg-violet-700 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"}`}
+                >
+                  {smpsTab === "overview" ? <><TrendingUp className="w-4 h-4" /> View Trends</> : <><Zap className="w-4 h-4" /> Overview</>}
+                </Button>
+              </div>
+            </div>
+
+            {/* Sub-tabs */}
+            <div className="flex items-center gap-1 border border-slate-200/80 dark:border-slate-800 rounded-xl p-1 bg-slate-50/50 dark:bg-slate-900/30 self-start">
+              {[{k:"overview" as const, label:"Overview", icon:<Cpu className="w-3.5 h-3.5"/>},{k:"trends" as const, label:"Trends", icon:<TrendingUp className="w-3.5 h-3.5"/>}].map(t=>(
+                <button key={t.k} onClick={()=>setSmpsTab(t.k)}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${smpsTab===t.k ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                >{t.icon}{t.label}</button>
+              ))}
+            </div>
+
+            {/* ======= OVERVIEW TAB ======= */}
+            {smpsTab === "overview" && (
+              <div className="flex flex-col gap-5">
+
+                {/* ── HERO IDENTITY STRIP ── */}
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 border border-slate-800/60 shadow-xl">
+                  {/* decorative grid */}
+                  <div className="absolute inset-0 opacity-[0.04]" style={{backgroundImage:'repeating-linear-gradient(0deg,#fff 0,#fff 1px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,#fff 0,#fff 1px,transparent 1px,transparent 40px)'}} />
+                  <div className="absolute top-0 right-0 w-72 h-72 rounded-full bg-blue-600/10 -translate-y-1/2 translate-x-1/4 blur-3xl pointer-events-none" />
+                  <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-violet-600/10 translate-y-1/2 -translate-x-1/4 blur-3xl pointer-events-none" />
+                  <div className="relative flex flex-col md:flex-row items-start md:items-center gap-6 p-6">
+                    {/* Icon */}
+                    <div className="flex-shrink-0 w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-violet-600/30 border border-blue-400/20 flex items-center justify-center shadow-lg">
+                      <HardDrive className="w-10 h-10 text-blue-300" strokeWidth={1.2} />
+                    </div>
+                    {/* Identity */}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400/70">SMPS Equipment</span>
+                        <span className="w-1 h-1 rounded-full bg-slate-600" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Slave ID: 1</span>
+                      </div>
+                      <h2 className="text-3xl font-black text-white tracking-tight">{vendor} <span className="text-blue-400 font-light">Dashboard</span></h2>
+                      <p className="text-slate-400 text-xs mt-1.5 font-mono">Model: New(Bi) ATC · Type: SMPS · Serial: {serialNo}</p>
+                    </div>
+                    {/* Status pills */}
+                    <div className="flex flex-col gap-2 items-end">
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/25">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="text-xs font-black text-emerald-300 uppercase tracking-wider">Connected</span>
+                      </div>
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/15 border border-blue-400/25">
+                        <Clock className="w-3 h-3 text-blue-300" />
+                        <span className="text-xs font-bold text-blue-300 font-mono">Last sync: just now</span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Horizontal stats belt */}
+                  <div className="relative border-t border-white/5 grid grid-cols-2 md:grid-cols-4 divide-x divide-white/5">
+                    {[
+                      {l:"Run Hours", v:`${hours}`, u:"hrs", accent:"text-blue-300"},
+                      {l:"Software", v:"v4.2.1", u:"", accent:"text-violet-300"},
+                      {l:"Manufacturer", v: vendor, u:"", accent:"text-teal-300"},
+                      {l:"Last Report", v: lastReported, u:"", accent:"text-amber-300"},
+                    ].map(s=>(
+                      <div key={s.l} className="flex flex-col px-5 py-3.5">
+                        <span className="text-[9px] uppercase tracking-widest text-slate-500 font-bold mb-1">{s.l}</span>
+                        <span className={`text-sm font-black font-mono ${s.accent}`}>{s.v}<span className="text-xs font-semibold ml-0.5 text-slate-400">{s.u}</span></span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── LIVE PARAMETERS + DEVICE INFO ── */}
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
+
+                  {/* Device Info — left narrow col */}
+                  <Card className="xl:col-span-4 border-slate-200/80 dark:border-slate-800 bg-white dark:bg-card shadow-xs overflow-hidden">
+                    <div className="flex items-center gap-2 p-4 border-b border-slate-100 dark:border-slate-800">
+                      <div className="w-1.5 h-4 rounded-full bg-gradient-to-b from-rose-400 to-rose-600" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400">Device Information</span>
+                    </div>
+                    <CardContent className="p-0">
+                      {[
+                        {l:"Product Serial Number", v: serialNo},
+                        {l:"Product Software Version", v:"v4.2.1"},
+                        {l:"Manufacturer", v: vendor},
+                        {l:"Type", v:"SMPS"},
+                        {l:"Make", v: vendor, hi:true},
+                        {l:"Model", v:"New(Bi) ATC"},
+                        {l:"Last Reported On", v: lastReported},
+                      ].map((row,i)=>(
+                        <div key={row.l} className={`flex items-center justify-between px-5 py-3 ${i % 2 === 0 ? 'bg-slate-50/50 dark:bg-slate-900/20' : ''}`}>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500">{row.l}</span>
+                          <span className={`text-xs font-black font-mono ${row.hi ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>{row.v}</span>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+
+                  {/* Live Parameters — right wide col */}
+                  <div className="xl:col-span-8 flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-4 rounded-full bg-gradient-to-b from-amber-400 to-orange-600" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600 dark:text-slate-400">Live Parameters</span>
+                      <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping ml-1" />
+                    </div>
+                    {/* Voltage row — 3 wide cards */}
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        {l:"Main Voltage R", v: rPhaseVolts, u:"V", from:"#059669", to:"#0d9488"},
+                        {l:"Main Voltage Y", v: yPhaseVolts, u:"V", from:"#059669", to:"#0d9488"},
+                        {l:"Main Voltage B", v: bPhaseVolts, u:"V", from:"#059669", to:"#0d9488"},
+                      ].map(m=>(
+                        <div key={m.l} className="relative overflow-hidden rounded-xl p-4 flex flex-col gap-1" style={{background:`linear-gradient(135deg,${m.from},${m.to})`}}>
+                          <div className="absolute top-0 right-0 w-12 h-12 rounded-full opacity-20" style={{background:m.to, filter:'blur(16px)'}} />
+                          <span className="text-[9px] font-bold uppercase tracking-widest text-white/70">{m.l}</span>
+                          <div className="flex items-end gap-1">
+                            <span className="text-3xl font-black text-white leading-none">{m.v}</span>
+                            <span className="text-sm font-bold text-white/70 mb-0.5">{m.u}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Run hours row — 3 teal cards */}
+                    <div className="grid grid-cols-3 gap-3">
+                      {[
+                        {l:"DG Run Hrs", v: dgRunHrs, u:"Hrs", from:"#0891b2", to:"#2563eb"},
+                        {l:"Mains Run Hrs", v: mainsRunHrs, u:"Hrs", from:"#0891b2", to:"#2563eb"},
+                        {l:"Battery Run Hrs", v: battRunHrs, u:"Hrs", from:"#0891b2", to:"#2563eb"},
+                      ].map(m=>(
+                        <div key={m.l} className="relative overflow-hidden rounded-xl p-4 flex flex-col gap-1" style={{background:`linear-gradient(135deg,${m.from},${m.to})`}}>
+                          <span className="text-[9px] font-bold uppercase tracking-widest text-white/70">{m.l}</span>
+                          <div className="flex items-end gap-1">
+                            <span className="text-2xl font-black text-white leading-none">{m.v}</span>
+                            <span className="text-xs font-bold text-white/70 mb-0.5">{m.u}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Bottom row — 2 special cards */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="relative overflow-hidden rounded-xl p-5 flex flex-col gap-1" style={{background:'linear-gradient(135deg,#7c3aed,#4f46e5)'}}>
+                        <div className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full opacity-20" style={{background:'#a78bfa',filter:'blur(20px)'}} />
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-white/70">Total Load Current</span>
+                        <div className="flex items-end gap-1">
+                          <span className="text-4xl font-black text-white leading-none">{loadCurrent}</span>
+                          <span className="text-base font-bold text-white/70 mb-1">A</span>
+                        </div>
+                      </div>
+                      <div className="relative overflow-hidden rounded-xl p-5 flex flex-col gap-1" style={{background:'linear-gradient(135deg,#ea580c,#d97706)'}}>
+                        <div className="absolute -right-4 -bottom-4 w-20 h-20 rounded-full opacity-20" style={{background:'#fb923c',filter:'blur(20px)'}} />
+                        <span className="text-[9px] font-bold uppercase tracking-widest text-white/70">Battery Temperature</span>
+                        <div className="flex items-end gap-1">
+                          <span className="text-4xl font-black text-white leading-none">{battTemp}</span>
+                          <span className="text-base font-bold text-white/70 mb-1">°C</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── POWER SOURCE STRIP ── */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[
+                    {label:"Primary Source", name:"Grid (Mains)", desc:"Utility grid supply — 3-phase AC input", accentFrom:"#10b981", accentTo:"#0d9488", status:"ACTIVE", statusBg:"bg-emerald-50 dark:bg-emerald-950/30", statusColor:"text-emerald-700 dark:text-emerald-400", metrics:[{l:"Voltage",v:`${rPhaseVolts} V`},{l:"Frequency",v:`${(seed%3)+49} Hz`}]},
+                    {label:"Secondary Source", name:"DG (Generator)", desc:"Diesel generator backup — auto-start enabled", accentFrom:"#f97316", accentTo:"#d97706", status:"STANDBY", statusBg:"bg-orange-50 dark:bg-orange-950/30", statusColor:"text-orange-700 dark:text-orange-400", metrics:[{l:"Voltage",v:`0 V`},{l:"Fuel Level",v:`${85-seed%15}%`}]},
+                    {label:"Backup Source", name:"Battery Bank", desc:"VRLA 48V bank — auto discharge on failure", accentFrom:"#7c3aed", accentTo:"#6d28d9", status:"FLOAT", statusBg:"bg-violet-50 dark:bg-violet-950/30", statusColor:"text-violet-700 dark:text-violet-400", metrics:[{l:"Voltage",v:`${parseFloat(batteryVoltage).toFixed(1)} V`},{l:"Capacity",v:`${site.battPct.toFixed(0)}%`}]},
+                  ].map(src=>(
+                    <div key={src.label} className="relative rounded-xl overflow-hidden border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-card shadow-xs hover:shadow-md transition-shadow">
+                      <div className="absolute left-0 top-0 bottom-0 w-1" style={{background:`linear-gradient(to bottom,${src.accentFrom},${src.accentTo})`}} />
+                      <div className="pl-5 pr-4 pt-4 pb-4">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-1">{src.label}</span>
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-sm font-black text-slate-800 dark:text-slate-100">{src.name}</h4>
+                          <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full ${src.statusBg} ${src.statusColor}`}>{src.status}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-3 leading-relaxed">{src.desc}</p>
+                        <div className="flex items-center gap-4 border-t border-slate-100 dark:border-slate-800 pt-3">
+                          {src.metrics.map(m=>(
+                            <div key={m.l}>
+                              <span className="text-[9px] text-slate-400 font-bold uppercase block mb-0.5">{m.l}</span>
+                              <span className="text-sm font-black text-slate-700 dark:text-slate-300 font-mono">{m.v}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ======= TRENDS TAB ======= */}
+            {smpsTab === "trends" && (
+              <div className="flex flex-col gap-5">
+                {[
+                  {title:"Common Trends", subtitle:"Battery Voltage · 24 hr window", icon:"📉", iconBg:"bg-rose-600", data:battVoltageData, key:"V", unit:"V", color:"#7c3aed", fill:"#7c3aed", label:"Battery Voltage"},
+                  {title:"Energy Trends", subtitle:"Total kWh consumption over 24 hrs", icon:"⚡", iconBg:"bg-amber-500", data:energyData, key:"kWh", unit:"kWh", color:"#f59e0b", fill:"#f59e0b", label:"Energy (kWh)"},
+                  {title:"Temperature Trends", subtitle:"Ambient & battery temperature", icon:"🌡️", iconBg:"bg-rose-500", data:tempData, key:"C", unit:"°C", color:"#ef4444", fill:"#ef4444", label:"Temperature (°C)"},
+                ].map((chart)=>(
+                  <Card key={chart.title} className="border-slate-200/80 dark:border-slate-800 bg-white dark:bg-card shadow-xs overflow-hidden">
+                    <CardHeader className="p-5 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-lg ${chart.iconBg} flex items-center justify-center shadow-sm`}>
+                          <span className="text-base">{chart.icon}</span>
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">{chart.title}</h4>
+                          <p className="text-[10px] text-slate-400 font-mono">{chart.subtitle}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 border border-slate-200/80 dark:border-slate-700 rounded-lg px-3 py-1.5 bg-slate-50 dark:bg-slate-900">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                        <span className="text-[10px] font-mono text-slate-500">2026/07/08 TO 2026/07/08</span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-5">
+                      <div className="h-52 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={chart.data} margin={{top:10,right:10,left:-20,bottom:0}}>
+                            <defs>
+                              <linearGradient id={`smpsGrad-${chart.key}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor={chart.fill} stopOpacity={0.18} />
+                                <stop offset="95%" stopColor={chart.fill} stopOpacity={0} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" className="dark:stroke-slate-800/60" vertical={false} />
+                            <XAxis dataKey="t" stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} />
+                            <YAxis stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} unit={chart.unit} domain={["auto","auto"]} />
+                            <ChartTooltip contentStyle={tooltipStyle} />
+                            <Area type="monotone" dataKey={chart.key} stroke={chart.color} strokeWidth={2.5}
+                              fill={`url(#smpsGrad-${chart.key})`} name={chart.label} dot={false}
+                              activeDot={{r:5, fill:chart.color, stroke:"white", strokeWidth:2}} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+
+                {/* Power Trends — dual line */}
+                <Card className="border-slate-200/80 dark:border-slate-800 bg-white dark:bg-card shadow-xs overflow-hidden">
+                  <CardHeader className="p-5 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center shadow-sm">
+                        <span className="text-base">🔥</span>
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">Power Trends</h4>
+                        <p className="text-[10px] text-slate-400 font-mono">Load 1 & Load 2 power draw · 24 hr window</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3">
+                        {[{c:"#7c3aed",l:"Load 1 Power"},{c:"#ef4444",l:"Load 2 Power"}].map(x=>(
+                          <span key={x.l} className="flex items-center gap-1 text-[10px] font-bold text-slate-500">
+                            <span className="w-4 h-0.5 rounded inline-block" style={{backgroundColor:x.c}} />{x.l}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-2 border border-slate-200/80 dark:border-slate-700 rounded-lg px-3 py-1.5 bg-slate-50 dark:bg-slate-900">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                        <span className="text-[10px] font-mono text-slate-500">2026/07/08 TO 2026/07/08</span>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-5">
+                    <div className="h-52 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={powerData} margin={{top:10,right:10,left:-15,bottom:0}}>
+                          <defs>
+                            <linearGradient id="smpsL1" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.15} />
+                              <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
+                            </linearGradient>
+                            <linearGradient id="smpsL2" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#ef4444" stopOpacity={0.12} />
+                              <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" className="dark:stroke-slate-800/60" vertical={false} />
+                          <XAxis dataKey="t" stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} />
+                          <YAxis stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} unit="W" domain={["auto","auto"]} />
+                          <ChartTooltip contentStyle={tooltipStyle} />
+                          <Area type="monotone" dataKey="L1" stroke="#7c3aed" strokeWidth={2.5} fill="url(#smpsL1)" name="Load 1 Power (W)" dot={false} activeDot={{r:5,fill:"#7c3aed",stroke:"white",strokeWidth:2}} />
+                          <Area type="monotone" dataKey="L2" stroke="#ef4444" strokeWidth={2} fill="url(#smpsL2)" name="Load 2 Power (W)" dot={false} activeDot={{r:5,fill:"#ef4444",stroke:"white",strokeWidth:2}} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       {/* Tabs Dynamic Content Panel */}
+      {!smpsDetailOpen && (
       <AnimatePresence mode="wait">
+
         <motion.div
           key={activeTab}
           initial={{ opacity: 0, y: 10 }}
@@ -411,7 +817,11 @@ export default function SiteDashboard({ site, onBack }: SiteDashboardProps) {
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {/* SMPS Block */}
-                  <Card className="border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-blue-500/30 hover:shadow-md transition-all group overflow-hidden relative bg-white dark:bg-card">
+                  <Card
+                    onClick={() => setSmpsDetailOpen(true)}
+                    className="border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-blue-500/40 hover:shadow-lg transition-all group overflow-hidden relative bg-white dark:bg-card cursor-pointer"
+                  >
+                    <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-blue-500 to-violet-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardContent className="p-5 flex flex-col gap-3">
                       <div className="flex justify-between items-start">
                         <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
@@ -426,12 +836,14 @@ export default function SiteDashboard({ site, onBack }: SiteDashboardProps) {
                           <span>Make: {site.vendor !== "N/A" ? site.vendor.toUpperCase() : "VERTIV"}</span>
                           <span>{seed % 100 + 400} Hours</span>
                         </div>
+                        <p className="text-[9px] font-bold text-blue-500 dark:text-blue-400 uppercase tracking-widest mt-2">Click to inspect →</p>
                       </div>
                     </CardContent>
                   </Card>
 
                   {/* SPS Block */}
-                  <Card className="border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-blue-500/30 hover:shadow-md transition-all group overflow-hidden relative bg-white dark:bg-card">
+                  <Card onClick={() => setSmpsDetailOpen(true)} className="border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-amber-500/40 hover:shadow-lg transition-all group overflow-hidden relative bg-white dark:bg-card cursor-pointer">
+                    <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-amber-400 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardContent className="p-5 flex flex-col gap-3">
                       <div className="flex justify-between items-start">
                         <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
@@ -446,12 +858,14 @@ export default function SiteDashboard({ site, onBack }: SiteDashboardProps) {
                           <span>Make: DELTA</span>
                           <span>{(seed % 50) + 120} Hours</span>
                         </div>
+                        <p className="text-[9px] font-bold text-amber-500 dark:text-amber-400 uppercase tracking-widest mt-2">Click to inspect →</p>
                       </div>
                     </CardContent>
                   </Card>
 
                   {/* DGCON Block */}
-                  <Card className="border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-blue-500/30 hover:shadow-md transition-all group overflow-hidden relative bg-white dark:bg-card">
+                  <Card onClick={() => setSmpsDetailOpen(true)} className="border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-rose-500/40 hover:shadow-lg transition-all group overflow-hidden relative bg-white dark:bg-card cursor-pointer">
+                    <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-rose-500 to-red-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardContent className="p-5 flex flex-col gap-3">
                       <div className="flex justify-between items-start">
                         <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform">
@@ -466,12 +880,14 @@ export default function SiteDashboard({ site, onBack }: SiteDashboardProps) {
                           <span>Fuel: {85 - (seed % 15)}%</span>
                           <span>{(seed % 40) + 85} Hours</span>
                         </div>
+                        <p className="text-[9px] font-bold text-rose-500 dark:text-rose-400 uppercase tracking-widest mt-2">Click to inspect →</p>
                       </div>
                     </CardContent>
                   </Card>
 
                   {/* PFLS Block */}
-                  <Card className="border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-blue-500/30 hover:shadow-md transition-all group overflow-hidden relative bg-white dark:bg-card">
+                  <Card onClick={() => setSmpsDetailOpen(true)} className="border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-purple-500/40 hover:shadow-lg transition-all group overflow-hidden relative bg-white dark:bg-card cursor-pointer">
+                    <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-purple-500 to-violet-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardContent className="p-5 flex flex-col gap-3">
                       <div className="flex justify-between items-start">
                         <div className="p-2.5 rounded-xl bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 group-hover:scale-110 transition-transform">
@@ -486,12 +902,14 @@ export default function SiteDashboard({ site, onBack }: SiteDashboardProps) {
                           <span>Make: N/A</span>
                           <span>-</span>
                         </div>
+                        <p className="text-[9px] font-bold text-purple-500 dark:text-purple-400 uppercase tracking-widest mt-2">Click to inspect →</p>
                       </div>
                     </CardContent>
                   </Card>
 
                   {/* BMS Block */}
-                  <Card className="border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-blue-500/30 hover:shadow-md transition-all group overflow-hidden relative bg-white dark:bg-card">
+                  <Card onClick={() => setSmpsDetailOpen(true)} className="border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-emerald-500/40 hover:shadow-lg transition-all group overflow-hidden relative bg-white dark:bg-card cursor-pointer">
+                    <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-emerald-400 to-teal-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardContent className="p-5 flex flex-col gap-3">
                       <div className="flex justify-between items-start">
                         <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
@@ -506,12 +924,14 @@ export default function SiteDashboard({ site, onBack }: SiteDashboardProps) {
                           <span>Make: Exide</span>
                           <span>Temp: {roomTemperature}°C</span>
                         </div>
+                        <p className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mt-2">Click to inspect →</p>
                       </div>
                     </CardContent>
                   </Card>
 
                   {/* UPS Block */}
-                  <Card className="border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-blue-500/30 hover:shadow-md transition-all group overflow-hidden relative bg-white dark:bg-card">
+                  <Card onClick={() => setSmpsDetailOpen(true)} className="border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-teal-500/40 hover:shadow-lg transition-all group overflow-hidden relative bg-white dark:bg-card cursor-pointer">
+                    <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-teal-400 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardContent className="p-5 flex flex-col gap-3">
                       <div className="flex justify-between items-start">
                         <div className="p-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/30 text-teal-600 dark:text-teal-400 group-hover:scale-110 transition-transform">
@@ -526,12 +946,14 @@ export default function SiteDashboard({ site, onBack }: SiteDashboardProps) {
                           <span>Make: APC</span>
                           <span>98% Charged</span>
                         </div>
+                        <p className="text-[9px] font-bold text-teal-600 dark:text-teal-400 uppercase tracking-widest mt-2">Click to inspect →</p>
                       </div>
                     </CardContent>
                   </Card>
 
                   {/* Air Conditioner Block */}
-                  <Card className="border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-blue-500/30 hover:shadow-md transition-all group overflow-hidden relative bg-white dark:bg-card">
+                  <Card onClick={() => setSmpsDetailOpen(true)} className="border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-cyan-500/40 hover:shadow-lg transition-all group overflow-hidden relative bg-white dark:bg-card cursor-pointer">
+                    <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-cyan-400 to-sky-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardContent className="p-5 flex flex-col gap-3">
                       <div className="flex justify-between items-start">
                         <div className="p-2.5 rounded-xl bg-cyan-50 dark:bg-cyan-950/30 text-cyan-600 dark:text-cyan-400 group-hover:scale-110 transition-transform">
@@ -546,12 +968,14 @@ export default function SiteDashboard({ site, onBack }: SiteDashboardProps) {
                           <span>Make: DAIKIN</span>
                           <span>Set Temp: 22°C</span>
                         </div>
+                        <p className="text-[9px] font-bold text-cyan-600 dark:text-cyan-400 uppercase tracking-widest mt-2">Click to inspect →</p>
                       </div>
                     </CardContent>
                   </Card>
 
                   {/* Servo Stabilizer Block */}
-                  <Card className="border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-blue-500/30 hover:shadow-md transition-all group overflow-hidden relative bg-white dark:bg-card">
+                  <Card onClick={() => setSmpsDetailOpen(true)} className="border-slate-200/80 dark:border-slate-800 shadow-xs hover:border-orange-500/40 hover:shadow-lg transition-all group overflow-hidden relative bg-white dark:bg-card cursor-pointer">
+                    <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-orange-400 to-amber-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     <CardContent className="p-5 flex flex-col gap-3">
                       <div className="flex justify-between items-start">
                         <div className="p-2.5 rounded-xl bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform">
@@ -566,6 +990,7 @@ export default function SiteDashboard({ site, onBack }: SiteDashboardProps) {
                           <span>Make: Servokon</span>
                           <span>Input: 415 V AC</span>
                         </div>
+                        <p className="text-[9px] font-bold text-orange-500 dark:text-orange-400 uppercase tracking-widest mt-2">Click to inspect →</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -691,8 +1116,496 @@ export default function SiteDashboard({ site, onBack }: SiteDashboardProps) {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* ============ ENERGY DATA SECTION ============ */}
+              <div className="flex flex-col gap-0">
+                {/* Energy Sub-tab switcher */}
+                <div className="flex items-center gap-1 border border-slate-200/80 dark:border-slate-800 rounded-xl p-1 bg-slate-50/50 dark:bg-slate-900/30 self-start mb-5">
+                  <button
+                    onClick={() => setEnergySubTab("data")}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      energySubTab === "data"
+                        ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                        : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                    }`}
+                  >
+                    <BarChart2 className="w-3.5 h-3.5" /> Energy Data
+                  </button>
+                  <button
+                    onClick={() => setEnergySubTab("trend")}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      energySubTab === "trend"
+                        ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                        : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                    }`}
+                  >
+                    <TrendingUp className="w-3.5 h-3.5" /> Energy Trend
+                  </button>
+                </div>
+
+                {/* ===== ENERGY DATA TAB ===== */}
+                {energySubTab === "data" && (
+                  <div className="flex flex-col gap-8">
+
+                    {/* Energy Run Hours Breakdown + Donut row */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                      <Card className="lg:col-span-8 border-slate-200/80 dark:border-slate-800 bg-white dark:bg-card shadow-xs">
+                        <CardHeader className="p-5 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+                          <CardTitle className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2.5">
+                            <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block animate-pulse" />
+                            Energy Run Hours Breakdown
+                          </CardTitle>
+                          <div className="flex items-center gap-2 border border-slate-200/80 dark:border-slate-700 rounded-lg px-3 py-1.5 bg-slate-50 dark:bg-slate-900">
+                            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                            <span className="text-[10px] font-mono text-slate-500">2026/06/09 TO 2026/07/08</span>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-5">
+                          <div className="h-56 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={reportChartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                                <defs>
+                                  <linearGradient id="gridGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#10b981" stopOpacity={0.95} />
+                                    <stop offset="100%" stopColor="#059669" stopOpacity={0.85} />
+                                  </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" className="dark:stroke-slate-800/60" vertical={false} />
+                                <XAxis dataKey="name" stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} />
+                                <YAxis stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} unit=" h" />
+                                <ChartTooltip
+                                  cursor={{ fill: "rgba(99,102,241,0.06)" }}
+                                  contentStyle={{ backgroundColor: "rgba(15,23,42,0.96)", borderRadius: "10px", border: "none", color: "white", fontSize: "11px", padding: "10px 14px" }}
+                                />
+                                <Bar dataKey="Grid" name="Grid" stackId="a" fill="url(#gridGrad)" radius={[0,0,0,0]} />
+                                <Bar dataKey="DG" name="DG" stackId="a" fill="#f97316" radius={[0,0,0,0]} />
+                                <Bar dataKey="Battery" name="Battery" stackId="a" fill="#ec4899" radius={[3,3,0,0]} />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+                          <div className="flex items-center gap-5 mt-3 justify-center">
+                            {[{c:"#10b981",l:"Grid"},{c:"#f97316",l:"DG"},{c:"#ec4899",l:"Battery"}].map(i=>(
+                              <span key={i.l} className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                                <span className="w-3 h-2 rounded inline-block" style={{backgroundColor:i.c}} />{i.l}
+                              </span>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Site total hours donut summary */}
+                      <Card className="lg:col-span-4 border-slate-200/80 dark:border-slate-800 bg-white dark:bg-card shadow-xs">
+                        <CardContent className="p-6 flex flex-col items-center justify-center gap-5 h-full">
+                          <div className="text-[10px] font-bold text-slate-400 tracking-wider uppercase text-center w-full">
+                            Site Started On: 2025-10-27 09:16:03
+                          </div>
+                          <div className="relative w-32 h-32 flex items-center justify-center">
+                            <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                              <circle cx="50" cy="50" r="40" fill="none" stroke="#f1f5f9" strokeWidth="9" className="dark:stroke-slate-800" />
+                              <circle cx="50" cy="50" r="40" fill="none" stroke="#2563eb" strokeWidth="9"
+                                strokeDasharray={`${2 * Math.PI * 40 * (site.mainsPct / 100)} ${2 * Math.PI * 40 * (1 - site.mainsPct / 100)}`}
+                                strokeLinecap="round" className="transition-all duration-700" />
+                              <circle cx="50" cy="50" r="40" fill="none" stroke="#f97316" strokeWidth="9"
+                                strokeDasharray={`${2 * Math.PI * 40 * (site.dgPct / 100)} ${2 * Math.PI * 40 * (1 - site.dgPct / 100)}`}
+                                strokeDashoffset={-(2 * Math.PI * 40 * (site.mainsPct / 100))}
+                                strokeLinecap="round" />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                              <span className="text-2xl font-bold text-slate-800 dark:text-slate-100">195</span>
+                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Hrs</span>
+                            </div>
+                          </div>
+                          <div className="w-full flex flex-col gap-3">
+                            {[
+                              {label:"GRID", pct: site.mainsPct, color:"bg-blue-600", textColor:"text-blue-600 dark:text-blue-400"},
+                              {label:"DG", pct: site.dgPct, color:"bg-orange-500", textColor:"text-orange-600 dark:text-orange-400"},
+                              {label:"Battery", pct: site.battPct, color:"bg-pink-500", textColor:"text-pink-600 dark:text-pink-400"},
+                            ].map(row=>(
+                              <div key={row.label} className="flex items-center gap-2.5">
+                                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 w-12 uppercase tracking-wide">{row.label}</span>
+                                <div className="flex-1 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                  <div className={`h-full ${row.color} rounded-full transition-all duration-700`} style={{width:`${Math.max(row.pct,1)}%`}} />
+                                </div>
+                                <span className={`text-[10px] font-bold font-mono w-9 text-right ${row.textColor}`}>{row.pct.toFixed(1)}%</span>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* GRID Energy Information */}
+                    <div className="flex flex-col gap-5">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center shadow-lg shadow-emerald-500/10">
+                            <Zap className="w-5 h-5 animate-pulse" />
+                          </div>
+                          <div>
+                            <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">Utility Grid Analytics</h3>
+                            <p className="text-[11px] text-slate-400 dark:text-slate-500">Real-time utility grid supply parameters and phase diagnostics</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 self-start md:self-auto">
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/30 uppercase tracking-wider">Grid Active</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {[
+                          {phase:"R", name:"Phase Red", color:"text-red-500", border:"border-red-100 dark:border-red-950/20", bg:"from-red-500", volts: rPhaseVolts, amps: rPhaseAmps},
+                          {phase:"Y", name:"Phase Yellow", color:"text-amber-500", border:"border-amber-100 dark:border-amber-950/20", bg:"from-amber-500", volts: yPhaseVolts, amps: yPhaseAmps},
+                          {phase:"B", name:"Phase Blue", color:"text-blue-500", border:"border-blue-100 dark:border-blue-950/20", bg:"from-blue-500", volts: bPhaseVolts, amps: bPhaseAmps},
+                        ].map(p=>(
+                          <Card key={p.phase} className={`border ${p.border} bg-white dark:bg-card shadow-xs hover:shadow-md transition-all overflow-hidden relative group`}>
+                            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${p.bg} to-slate-200 dark:to-slate-800`} />
+                            <CardContent className="p-5 pt-6">
+                              <div className="flex justify-between items-center mb-4">
+                                <div className="flex items-center gap-2">
+                                  <span className={`w-2.5 h-2.5 rounded-full ${p.phase === "R" ? "bg-red-500 animate-pulse" : p.phase === "Y" ? "bg-amber-500 animate-pulse" : "bg-blue-500 animate-pulse"}`} />
+                                  <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 tracking-wider uppercase">{p.name}</span>
+                                </div>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-500">L{p.phase}</span>
+                              </div>
+                              
+                              <div className="flex items-baseline gap-1.5 mb-5">
+                                <span className="text-4xl font-extrabold tracking-tight text-slate-800 dark:text-slate-100 font-mono">{p.volts}</span>
+                                <span className="text-sm font-semibold text-slate-400 uppercase">V AC</span>
+                              </div>
+                              
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between text-xs py-1.5 border-b border-slate-100/70 dark:border-slate-800/40">
+                                  <span className="text-slate-400 dark:text-slate-500">Current Load</span>
+                                  <span className="font-bold text-slate-700 dark:text-slate-300 font-mono">{p.amps} A</span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs py-1.5 border-b border-slate-100/70 dark:border-slate-800/40">
+                                  <span className="text-slate-400 dark:text-slate-500">Line Frequency</span>
+                                  <span className="font-bold text-slate-700 dark:text-slate-300 font-mono">{(seed%3)+49}.0 Hz</span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs py-1.5">
+                                  <span className="text-slate-400 dark:text-slate-500">Active Power</span>
+                                  <span className="font-bold text-slate-700 dark:text-slate-300 font-mono">{(p.amps*p.volts/1000).toFixed(2)} kW</span>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {[
+                          {label:"Total Grid Hours", val: `${site.mainsHours} hrs`, color:"bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-100/50 dark:border-emerald-950/30", icon: Clock},
+                          {label:"Single-Phase Time", val: `${(site.mainsHours*0.05).toFixed(1)} hrs`, color:"bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-100/50 dark:border-amber-950/30", icon: Activity},
+                          {label:"Dual-Phase Time", val: `${(site.mainsHours*0.02).toFixed(1)} hrs`, color:"bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 border-blue-100/50 dark:border-blue-950/30", icon: Layers},
+                          {label:"Three-Phase Time", val: `${site.mainsHours} hrs`, color:"bg-indigo-50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 border-indigo-100/50 dark:border-indigo-950/30", icon: Zap},
+                        ].map(b=>(
+                          <Card key={b.label} className="border border-slate-100 dark:border-slate-800 bg-white dark:bg-card shadow-xs hover:shadow-md transition-all">
+                            <CardContent className="p-4 flex items-center gap-4">
+                              <div className={`w-10 h-10 rounded-xl ${b.color.split(" ")[0]} ${b.color.split(" ")[1]} flex items-center justify-center border ${b.color.split(" ").slice(4).join(" ")}`}>
+                                <b.icon className="w-5 h-5" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{b.label}</span>
+                                <span className="text-lg font-extrabold text-slate-800 dark:text-slate-100 font-mono tracking-tight">{b.val}</span>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* DG Energy Information */}
+                    <div className="flex flex-col gap-5">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-400 text-white flex items-center justify-center shadow-lg shadow-amber-500/10">
+                            <Cpu className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">Diesel Generator Diagnostics</h3>
+                            <p className="text-[11px] text-slate-400 dark:text-slate-500">Generator output telemetry, engine loads, and mode tracking</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 self-start md:self-auto">
+                          <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 px-2.5 py-0.5 rounded-full border border-slate-200 dark:border-slate-800 uppercase tracking-wider">Engine Standby</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {[
+                          {phase:"R", name:"Phase Red", color:"text-slate-400 dark:text-slate-500", border:"border-slate-100 dark:border-slate-900", volts: 0, amps: 0},
+                          {phase:"Y", name:"Phase Yellow", color:"text-slate-400 dark:text-slate-500", border:"border-slate-100 dark:border-slate-900", volts: 0, amps: 0},
+                          {phase:"B", name:"Phase Blue", color:"text-slate-400 dark:text-slate-500", border:"border-slate-100 dark:border-slate-900", volts: 0, amps: 0},
+                        ].map(p=>(
+                          <Card key={p.phase} className={`border ${p.border} bg-slate-50/50 dark:bg-slate-950/20 shadow-xs hover:shadow-md transition-all overflow-hidden relative group`}>
+                            <div className="absolute top-0 left-0 right-0 h-1 bg-slate-200 dark:bg-slate-800" />
+                            <CardContent className="p-5 pt-6">
+                              <div className="flex justify-between items-center mb-4">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                                  <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 tracking-wider uppercase">{p.name}</span>
+                                </div>
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-400 dark:text-slate-600">L{p.phase}</span>
+                              </div>
+                              
+                              <div className="flex items-baseline gap-1.5 mb-5 opacity-60">
+                                <span className="text-4xl font-extrabold tracking-tight text-slate-500 dark:text-slate-400 font-mono">{p.volts}</span>
+                                <span className="text-sm font-semibold text-slate-400 uppercase">V AC</span>
+                              </div>
+                              
+                              <div className="space-y-2 opacity-60">
+                                <div className="flex items-center justify-between text-xs py-1.5 border-b border-slate-100/70 dark:border-slate-800/40">
+                                  <span className="text-slate-400 dark:text-slate-500">Current Load</span>
+                                  <span className="font-bold text-slate-700 dark:text-slate-300 font-mono">{p.amps} A</span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs py-1.5 border-b border-slate-100/70 dark:border-slate-800/40">
+                                  <span className="text-slate-400 dark:text-slate-500">Line Frequency</span>
+                                  <span className="font-bold text-slate-700 dark:text-slate-300 font-mono">{p.volts}.0 Hz</span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs py-1.5">
+                                  <span className="text-slate-400 dark:text-slate-500">Real Power</span>
+                                  <span className="font-bold text-slate-700 dark:text-slate-300 font-mono">0.00 kW</span>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                        {[
+                          {label:"Total Engine Hours", val: `${site.dgHours} hrs`, color:"from-slate-700 to-slate-900"},
+                          {label:"On-Load Runtime", val: `${(site.dgHours*0.9).toFixed(1)} hrs`, color:"from-emerald-400 to-emerald-600"},
+                          {label:"Off-Load Runtime", val: `${(site.dgHours*0.1).toFixed(1)} hrs`, color:"from-red-400 to-red-600"},
+                          {label:"Auto Mode Run", val: `${(site.dgHours*0.8).toFixed(1)} hrs`, color:"from-blue-400 to-blue-600"},
+                          {label:"Manual Mode Run", val: `${(site.dgHours*0.2).toFixed(1)} hrs`, color:"from-purple-400 to-purple-600"},
+                          {label:"Tamper Lockout", val: "0.0 hrs", color:"from-orange-400 to-orange-600"},
+                        ].map(b=>(
+                          <Card key={b.label} className="border border-slate-150 dark:border-slate-800 bg-white dark:bg-card shadow-xs hover:shadow-md transition-all overflow-hidden">
+                            <CardContent className="p-3.5 flex flex-col items-center justify-center gap-1.5 text-center">
+                              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{b.label}</span>
+                              <span className="text-base font-extrabold text-slate-800 dark:text-slate-100 font-mono tracking-tight">{b.val}</span>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Battery Energy Information */}
+                    <div className="flex flex-col gap-5">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-500 to-indigo-400 text-white flex items-center justify-center shadow-lg shadow-violet-500/10">
+                            <Battery className="w-5 h-5 animate-pulse" />
+                          </div>
+                          <div>
+                            <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">DC Power & Battery Storage</h3>
+                            <p className="text-[11px] text-slate-400 dark:text-slate-500">Main battery bank voltage levels, starter status, and backup duration</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 self-start md:self-auto">
+                          <span className="w-2.5 h-2.5 rounded-full bg-violet-500 animate-pulse" />
+                          <span className="text-[10px] font-bold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/30 px-2.5 py-0.5 rounded-full border border-violet-100 dark:border-violet-900/30 uppercase tracking-wider">Active Backup Mode</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {[
+                          {label:"DG Starter Battery", desc:"Engine starter voltage status", val:`${(parseFloat(batteryVoltage)-1.2).toFixed(1)} V`, icon: Cpu, iconColor:"text-violet-500", bg:"from-violet-500", border:"border-violet-100 dark:border-violet-950/30"},
+                          {label:"Main Battery Bank", desc:"Main DC system voltage level", val:`${batteryVoltage} V`, icon: Battery, iconColor:"text-emerald-500", bg:"from-emerald-500", border:"border-emerald-100 dark:border-emerald-950/30"},
+                          {label:"Backup Run Hours", desc:"Accumulated discharge runtime", val:`${site.battHours} Hrs`, icon: Clock, iconColor:"text-rose-500", bg:"from-rose-500", border:"border-rose-100 dark:border-rose-950/30"},
+                        ].map(b=>(
+                          <Card key={b.label} className={`border ${b.border} bg-white dark:bg-card shadow-xs hover:shadow-md transition-all overflow-hidden relative group`}>
+                            <div className={`absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b ${b.bg} to-slate-200 dark:to-slate-800`} />
+                            <CardContent className="p-6 pl-8 flex items-center justify-between">
+                              <div className="flex flex-col gap-1.5">
+                                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{b.label}</span>
+                                <span className="text-2xl font-extrabold text-slate-800 dark:text-slate-100 font-mono tracking-tight">{b.val}</span>
+                                <span className="text-[10px] text-slate-400/80 dark:text-slate-500">{b.desc}</span>
+                              </div>
+                              <div className="w-12 h-12 rounded-2xl bg-slate-50 dark:bg-slate-900/60 flex items-center justify-center border border-slate-100 dark:border-slate-800 text-slate-500">
+                                <b.icon className={`w-6 h-6 ${b.iconColor}`} />
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ===== ENERGY TREND TAB ===== */}
+                {energySubTab === "trend" && (() => {
+                  const dateRange = "2026/07/08 TO 2026/07/08";
+                  const hours = ["00:00","02:00","04:00","06:00","08:00","10:00","12:00","14:00","16:00","18:00","20:00","22:00"];
+
+                  const energyUsageData = hours.map((h,i)=>({ time:h, kWh: (3.2 + Math.sin(i*0.7)*1.8 + Math.cos(i*0.3)*0.6).toFixed(2) }));
+                  const gridData = hours.map((h,i)=>({ time:h, kW: (rPhaseVolts*rPhaseAmps/1000 + Math.sin(i*0.5)*0.4 + 0.1*(seed%5)).toFixed(2) }));
+                  const acVoltageData = hours.map((h,i)=>({ time:h, R: (rPhaseVolts + Math.sin(i*0.8)*3).toFixed(1), Y: (yPhaseVolts + Math.cos(i*0.6)*2.5).toFixed(1), B: (bPhaseVolts + Math.sin(i*1.1)*2).toFixed(1) }));
+                  const dgData = hours.map((h,i)=>({ time:h, kW: Math.max(0, (site.dgPct > 5 ? 1.2 + Math.sin(i*0.4)*0.3 : 0)).toFixed(2) }));
+                  const battData = hours.map((h,i)=>({ time:h, V: (parseFloat(batteryVoltage) + Math.sin(i*0.9)*1.2).toFixed(1) }));
+
+                  const trendChartStyle = { backgroundColor:"rgba(15,23,42,0.96)", borderRadius:"10px", border:"none", color:"white", fontSize:"11px", padding:"10px 14px" };
+
+                  const trendCharts = [
+                    {
+                      title: "Energy Usage Trend",
+                      icon: "⚡",
+                      iconBg: "bg-violet-600",
+                      data: energyUsageData,
+                      dataKey: "kWh",
+                      unit: "kWh",
+                      stroke: "#7c3aed",
+                      fill: "#7c3aed",
+                      label: "Total Usage",
+                    },
+                    {
+                      title: "GRID Supply Energy Trend",
+                      icon: "🏭",
+                      iconBg: "bg-emerald-600",
+                      data: gridData,
+                      dataKey: "kW",
+                      unit: "kW",
+                      stroke: "#10b981",
+                      fill: "#10b981",
+                      label: "Grid Supply",
+                    },
+                    {
+                      title: "DG Supply Energy Trend",
+                      icon: "⛽",
+                      iconBg: "bg-orange-500",
+                      data: dgData,
+                      dataKey: "kW",
+                      unit: "kW",
+                      stroke: "#f97316",
+                      fill: "#f97316",
+                      label: "DG Output",
+                    },
+                    {
+                      title: "Battery Supply Trend",
+                      icon: "🔋",
+                      iconBg: "bg-rose-600",
+                      data: battData,
+                      dataKey: "V",
+                      unit: "V",
+                      stroke: "#ec4899",
+                      fill: "#ec4899",
+                      label: "Battery Voltage",
+                    },
+                  ];
+
+                  return (
+                    <div className="flex flex-col gap-5">
+
+                      {/* AC Voltage Trend – multi-line special card */}
+                      <Card className="border-slate-200/80 dark:border-slate-800 bg-white dark:bg-card shadow-xs overflow-hidden">
+                        <CardHeader className="p-5 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center shadow-sm">
+                              <span className="text-sm text-white font-bold">AC</span>
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">AC Voltage Trend</h4>
+                              <p className="text-[10px] text-slate-400 font-mono">R · Y · B Phase comparison</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3">
+                              {[{c:"#ef4444",l:"R"},{c:"#eab308",l:"Y"},{c:"#2563eb",l:"B"}].map(x=>(
+                                <span key={x.l} className="flex items-center gap-1 text-[10px] font-bold text-slate-500">
+                                  <span className="w-4 h-0.5 rounded inline-block" style={{backgroundColor:x.c}} />{x.l} Phase
+                                </span>
+                              ))}
+                            </div>
+                            <div className="flex items-center gap-2 border border-slate-200/80 dark:border-slate-700 rounded-lg px-3 py-1.5 bg-slate-50 dark:bg-slate-900">
+                              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                              <span className="text-[10px] font-mono text-slate-500">{dateRange}</span>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-5">
+                          <div className="h-52 w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={acVoltageData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <defs>
+                                  {[{id:"rGrad",c:"#ef4444"},{id:"yGrad",c:"#eab308"},{id:"bGrad",c:"#2563eb"}].map(g=>(
+                                    <linearGradient key={g.id} id={g.id} x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="5%" stopColor={g.c} stopOpacity={0.15} />
+                                      <stop offset="95%" stopColor={g.c} stopOpacity={0} />
+                                    </linearGradient>
+                                  ))}
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" className="dark:stroke-slate-800/60" vertical={false} />
+                                <XAxis dataKey="time" stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} />
+                                <YAxis stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} domain={["auto","auto"]} unit="V" />
+                                <ChartTooltip contentStyle={trendChartStyle} />
+                                <Area type="monotone" dataKey="R" stroke="#ef4444" strokeWidth={2} fill="url(#rGrad)" name="R Phase (V)" dot={false} />
+                                <Area type="monotone" dataKey="Y" stroke="#eab308" strokeWidth={2} fill="url(#yGrad)" name="Y Phase (V)" dot={false} />
+                                <Area type="monotone" dataKey="B" stroke="#2563eb" strokeWidth={2} fill="url(#bGrad)" name="B Phase (V)" dot={false} />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Single-metric trend cards */}
+                      {trendCharts.map((chart) => (
+                        <Card key={chart.title} className="border-slate-200/80 dark:border-slate-800 bg-white dark:bg-card shadow-xs overflow-hidden">
+                          <CardHeader className="p-5 border-b border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-8 h-8 rounded-lg ${chart.iconBg} flex items-center justify-center shadow-sm`}>
+                                <span className="text-base">{chart.icon}</span>
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">{chart.title}</h4>
+                                <p className="text-[10px] text-slate-400 font-mono">{chart.label} over 24 hrs</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 border border-slate-200/80 dark:border-slate-700 rounded-lg px-3 py-1.5 bg-slate-50 dark:bg-slate-900">
+                              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                              <span className="text-[10px] font-mono text-slate-500">{dateRange}</span>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="p-5">
+                            <div className="h-48 w-full">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={chart.data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                  <defs>
+                                    <linearGradient id={`grad-${chart.dataKey}`} x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="5%" stopColor={chart.fill} stopOpacity={0.2} />
+                                      <stop offset="95%" stopColor={chart.fill} stopOpacity={0} />
+                                    </linearGradient>
+                                  </defs>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" className="dark:stroke-slate-800/60" vertical={false} />
+                                  <XAxis dataKey="time" stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} />
+                                  <YAxis stroke="#94a3b8" fontSize={9} tickLine={false} axisLine={false} domain={["auto","auto"]} unit={chart.unit} />
+                                  <ChartTooltip contentStyle={trendChartStyle} />
+                                  <Area
+                                    type="monotone"
+                                    dataKey={chart.dataKey}
+                                    stroke={chart.stroke}
+                                    strokeWidth={2.5}
+                                    fill={`url(#grad-${chart.dataKey})`}
+                                    name={`${chart.label} (${chart.unit})`}
+                                    dot={false}
+                                    activeDot={{ r: 5, fill: chart.stroke, stroke: "white", strokeWidth: 2 }}
+                                  />
+                                </AreaChart>
+                              </ResponsiveContainer>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
           )}
+
+
 
           {/* ==================== 2. ALARMS TAB ==================== */}
           {activeTab === "alarms" && (
@@ -1010,113 +1923,269 @@ export default function SiteDashboard({ site, onBack }: SiteDashboardProps) {
 
           {/* ==================== 6. SETTINGS TAB ==================== */}
           {activeTab === "settings" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Alert thresholds card */}
-              <Card className="border-slate-200/80 dark:border-slate-800 shadow-xs bg-white dark:bg-card">
-                <CardHeader className="p-5 border-b border-slate-100 dark:border-slate-800">
-                  <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2">
-                    <Settings className="w-4.5 h-4.5 text-blue-500" /> Operational Alert Thresholds
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-5 flex flex-col gap-4">
-                  {/* Slider/input mockups */}
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-                      High Temperature Critical Limit (°C)
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="range" 
-                        min="25" 
-                        max="45" 
-                        defaultValue="38" 
-                        className="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600" 
+            <div className="flex flex-col gap-6">
+              {/* Site ID Header & Global Toggle */}
+              <Card className="border-slate-200/80 dark:border-slate-800 bg-white dark:bg-card shadow-xs overflow-hidden">
+                <div className="px-5 py-3 bg-slate-800 dark:bg-slate-950 text-white font-mono text-sm font-semibold tracking-wide">
+                  {site.id}
+                </div>
+                <div className="px-5 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3 bg-slate-50/50 dark:bg-slate-900/30">
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Global Site Settings:</span>
+                  <button
+                    onClick={() => setGlobalSiteEnabled(!globalSiteEnabled)}
+                    className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors cursor-pointer ${
+                      globalSiteEnabled ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-700"
+                    }`}
+                  >
+                    <span className={`inline-block w-4 h-4 transform rounded-full bg-white shadow transition-transform ${
+                      globalSiteEnabled ? "translate-x-7" : "translate-x-1"
+                    }`} />
+                  </button>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                    globalSiteEnabled ? "text-emerald-600" : "text-slate-400"
+                  }`}>{globalSiteEnabled ? "ON" : "OFF"}</span>
+                  <Button size="sm" variant="outline" className="h-8 text-xs font-bold cursor-pointer border-slate-200 dark:border-slate-700">
+                    Preview
+                  </Button>
+                </div>
+
+                {/* Details Form */}
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-2 mb-5 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">Details</h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+                    {/* Site ID */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400">Site Id</label>
+                      <input
+                        type="text"
+                        defaultValue={site.id}
+                        readOnly
+                        className="h-10 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-xs font-mono text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-not-allowed"
                       />
-                      <span className="text-xs font-bold font-mono text-slate-700 dark:text-slate-300">38°C</span>
+                    </div>
+                    {/* Name */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400">Name</label>
+                      <input
+                        type="text"
+                        defaultValue={site.name}
+                        className="h-10 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      />
+                    </div>
+                    {/* Description */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400">Description</label>
+                      <input
+                        type="text"
+                        placeholder="Optional description..."
+                        className="h-10 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30 placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                      />
+                    </div>
+                    {/* SQ Load */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400">SQ Load (KW)</label>
+                      <input
+                        type="number"
+                        defaultValue={parseFloat(site.loadKw) || 8.94}
+                        step="0.01"
+                        className="h-10 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-xs font-mono text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      />
                     </div>
                   </div>
 
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-                      Low Battery Voltage Alarm Trigger (V)
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="range" 
-                        min="44" 
-                        max="52" 
-                        defaultValue="47.5" 
-                        className="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600" 
-                      />
-                      <span className="text-xs font-bold font-mono text-slate-700 dark:text-slate-300">47.5V</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
+                    {/* Locations */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400">Locations</label>
+                      <div className="relative">
+                        <select className="w-full h-10 pl-3 pr-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-xs font-semibold text-slate-700 dark:text-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer">
+                          <option value="rajasthan">{site.circle}</option>
+                          <option value="maharashtra">Maharashtra</option>
+                          <option value="telangana">Telangana</option>
+                          <option value="up">Uttar Pradesh</option>
+                        </select>
+                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                      </div>
+                    </div>
+                    {/* Category */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400">Category</label>
+                      <div className="relative">
+                        <select className="w-full h-10 pl-3 pr-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-xs font-semibold text-slate-700 dark:text-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer">
+                          <option value="">Category</option>
+                          <option value="network">Network</option>
+                          <option value="atm">ATM</option>
+                          <option value="main">Main</option>
+                        </select>
+                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                      </div>
+                    </div>
+                    {/* SubCategory */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400">SubCategory</label>
+                      <div className="relative">
+                        <select className="w-full h-10 pl-3 pr-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-xs font-semibold text-slate-700 dark:text-slate-300 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer">
+                          <option value="">SubCategory</option>
+                          <option value="fiber">Fiber</option>
+                          <option value="eco">Eco</option>
+                        </select>
+                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                      </div>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-                      Mains Phase Under-Voltage Fault (V)
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <input 
-                        type="range" 
-                        min="160" 
-                        max="210" 
-                        defaultValue="180" 
-                        className="w-full h-1 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-600" 
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    {/* Latitude */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400">Latitude <span className="text-rose-500">*</span></label>
+                      <input
+                        type="number"
+                        defaultValue={lat.toFixed(6)}
+                        step="0.000001"
+                        className="h-10 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-xs font-mono text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
                       />
-                      <span className="text-xs font-bold font-mono text-slate-700 dark:text-slate-300">180V</span>
+                    </div>
+                    {/* Longitude */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400">Longitude <span className="text-rose-500">*</span></label>
+                      <input
+                        type="number"
+                        defaultValue={lng.toFixed(6)}
+                        step="0.000001"
+                        className="h-10 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-xs font-mono text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                      />
+                    </div>
+                    {/* Search Location */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-slate-500 dark:text-slate-400">Search location</label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                        <input
+                          type="text"
+                          placeholder="Search by place, address, landmark"
+                          className="w-full h-10 pl-8 pr-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/50 text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/30 placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex justify-end pt-3">
-                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-xs cursor-pointer">
-                      Save Threshold Configurations
+                  {/* Location on Map */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-blue-500" />
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Location on Map</span>
+                    </div>
+                    <div className="h-56 rounded-xl overflow-hidden border border-slate-200/80 dark:border-slate-700 relative">
+                      {settingsMapMounted ? (
+                        <MapContainer
+                          center={[lat, lng]}
+                          zoom={13}
+                          className="w-full h-full z-0"
+                          zoomControl={true}
+                        >
+                          <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+                          />
+                          <Marker position={[lat, lng]} icon={getMarkerIcon(site.status)}>
+                            <Popup>
+                              <div className="p-1">
+                                <h4 className="font-bold text-xs">{site.name}</h4>
+                                <p className="text-[10px] text-slate-500 mt-0.5">ID: {site.id}</p>
+                              </div>
+                            </Popup>
+                          </Marker>
+                        </MapContainer>
+                      ) : (
+                        <div className="w-full h-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center">
+                          <span className="text-xs text-slate-400">Loading map...</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Action buttons */}
+                  <div className="flex items-center justify-between pt-5 mt-4 border-t border-slate-100 dark:border-slate-800">
+                    <Button variant="outline" size="sm" className="h-9 text-xs font-semibold border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 cursor-pointer gap-1.5">
+                      <Trash className="w-3.5 h-3.5 text-rose-500" /> Delete Site
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Maintenance team contacts */}
-              <Card className="border-slate-200/80 dark:border-slate-800 shadow-xs bg-white dark:bg-card">
-                <CardHeader className="p-5 border-b border-slate-100 dark:border-slate-800">
-                  <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2">
-                    <User className="w-4.5 h-4.5 text-blue-500" /> Assigned NOC Engineers & Vendors
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-5 flex flex-col gap-4">
-                  <div className="flex items-start gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">
-                      SP
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Suresh P.</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Field Lead Technician (Udaipur)</span>
-                      <div className="flex items-center gap-3 text-[10px] text-slate-400 mt-1 font-mono">
-                        <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-slate-500" /> +91 98200 11223</span>
-                        <span className="flex items-center gap-1"><Mail className="w-3 h-3 text-slate-500" /> suresh.p@jio.com</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm">
-                      PM
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Priya M.</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">NOC Lead Coordinator</span>
-                      <div className="flex items-center gap-3 text-[10px] text-slate-400 mt-1 font-mono">
-                        <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-slate-500" /> +91 99330 44556</span>
-                        <span className="flex items-center gap-1"><Mail className="w-3 h-3 text-slate-500" /> priya.m@jio.com</span>
-                      </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="h-9 text-xs font-semibold border-slate-200 dark:border-slate-700 cursor-pointer">
+                        Cancel
+                      </Button>
+                      <Button size="sm" className="h-9 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs cursor-pointer gap-1.5">
+                        <Check className="w-3.5 h-3.5" /> Save Changes
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Threshold + Contacts row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card className="border-slate-200/80 dark:border-slate-800 shadow-xs bg-white dark:bg-card">
+                  <CardHeader className="p-5 border-b border-slate-100 dark:border-slate-800">
+                    <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2">
+                      <Settings className="w-4 h-4 text-blue-500" /> Operational Alert Thresholds
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-5 flex flex-col gap-5">
+                    {[
+                      {label:"High Temperature Critical Limit (°C)", min:25, max:45, val:"38", unit:"°C"},
+                      {label:"Low Battery Voltage Alarm Trigger (V)", min:44, max:52, val:"47.5", unit:"V"},
+                      {label:"Mains Phase Under-Voltage Fault (V)", min:160, max:210, val:"180", unit:"V"},
+                    ].map(t=>(
+                      <div key={t.label}>
+                        <div className="flex justify-between mb-2">
+                          <label className="text-xs font-semibold text-slate-600 dark:text-slate-400">{t.label}</label>
+                          <span className="text-xs font-bold font-mono text-blue-600 dark:text-blue-400">{t.val}{t.unit}</span>
+                        </div>
+                        <input type="range" min={t.min} max={t.max} defaultValue={t.val}
+                          className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600" />
+                      </div>
+                    ))}
+                    <div className="flex justify-end pt-1">
+                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs cursor-pointer">
+                        Save Thresholds
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-slate-200/80 dark:border-slate-800 shadow-xs bg-white dark:bg-card">
+                  <CardHeader className="p-5 border-b border-slate-100 dark:border-slate-800">
+                    <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2">
+                      <User className="w-4 h-4 text-blue-500" /> Assigned NOC Engineers & Vendors
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-5 flex flex-col gap-4">
+                    {[
+                      {init:"SP",name:"Suresh P.",role:"Field Lead Technician (Udaipur)",ph:"+91 98200 11223",mail:"suresh.p@jio.com",bg:"bg-blue-100 text-blue-700"},
+                      {init:"PM",name:"Priya M.",role:"NOC Lead Coordinator",ph:"+91 99330 44556",mail:"priya.m@jio.com",bg:"bg-teal-100 text-teal-700"},
+                    ].map((e,i)=>(
+                      <div key={i} className={`flex items-start gap-3 ${i>0?"":"border-b border-slate-100 dark:border-slate-800 pb-4"}` }>
+                        <div className={`w-10 h-10 rounded-full ${e.bg} flex items-center justify-center font-bold text-sm shrink-0`}>{e.init}</div>
+                        <div className="flex-1">
+                          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">{e.name}</span>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">{e.role}</span>
+                          <div className="flex flex-wrap gap-3 text-[10px] text-slate-400 mt-1 font-mono">
+                            <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{e.ph}</span>
+                            <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{e.mail}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           )}
         </motion.div>
       </AnimatePresence>
+      )}
     </div>
   );
 }
