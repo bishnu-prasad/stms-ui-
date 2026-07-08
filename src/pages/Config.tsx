@@ -104,12 +104,17 @@ export default function Config() {
   const [newCatType, setNewCatType] = useState<"main" | "sub">("main");
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const tab = searchParams.get("tab");
-    if (tab === "location" || tab === "category") {
-      setActiveTab(tab);
-    }
-  }, [location, window.location.search]);
+    const handleUrlChange = () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const tab = searchParams.get("tab");
+      if (tab === "location" || tab === "category") {
+        setActiveTab(tab);
+      }
+    };
+    window.addEventListener("popstate", handleUrlChange);
+    handleUrlChange();
+    return () => window.removeEventListener("popstate", handleUrlChange);
+  }, []);
 
   // ADD LOCATION HANDLER
   const handleAddLocation = (e: React.FormEvent) => {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
+import SiteDashboard from "./SiteDashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -506,11 +507,14 @@ const mockTopProblemSites = [
 /* -------------------------------------------------------------------------- */
 
 export default function Monitor() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const searchParams = new URLSearchParams(window.location.search);
   const subFromUrl = searchParams.get("sub") || "sites";
 
   const [activeSub, setActiveSub] = useState(subFromUrl);
+  const [inspectingSiteId, setInspectingSiteId] = useState<string | null>(
+    searchParams.get("inspect")
+  );
 
   // SITES TAB FILTERS
   const [siteHealthFilter, setSiteHealthFilter] = useState("all");
@@ -529,12 +533,33 @@ export default function Monitor() {
   const [expandedTagsAlarmId, setExpandedTagsAlarmId] = useState<string | null>(null);
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const sub = searchParams.get("sub");
-    if (sub === "sites" || sub === "alarms") {
-      setActiveSub(sub);
-    }
-  }, [location, window.location.search]);
+    const handleUrlChange = () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const sub = searchParams.get("sub");
+      if (sub === "sites" || sub === "alarms") {
+        setActiveSub(sub);
+      }
+      const inspect = searchParams.get("inspect");
+      setInspectingSiteId(inspect);
+    };
+    window.addEventListener("popstate", handleUrlChange);
+    handleUrlChange();
+    return () => window.removeEventListener("popstate", handleUrlChange);
+  }, []);
+
+  const handleInspectSite = (siteId: string) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("inspect", siteId);
+    setLocation(window.location.pathname + "?" + params.toString());
+    setInspectingSiteId(siteId);
+  };
+
+  const handleBackToList = () => {
+    const params = new URLSearchParams(window.location.search);
+    params.delete("inspect");
+    setLocation(window.location.pathname + "?" + params.toString());
+    setInspectingSiteId(null);
+  };
 
   // FILTER LOGIC FOR SITES
   const filteredSites = mockFleetData.filter((site) => {
@@ -594,6 +619,14 @@ export default function Monitor() {
       matchesVendor
     );
   });
+
+  const inspectedSite = mockFleetData.find((s) => s.id === inspectingSiteId);
+
+  if (inspectedSite) {
+    return (
+      <SiteDashboard site={inspectedSite} onBack={handleBackToList} />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6 pb-12">
@@ -664,7 +697,14 @@ export default function Monitor() {
       {/* Sub-tabs Navigation Bar (Sites vs Alarms) */}
       <div className="border-b border-slate-200 dark:border-border flex gap-6 overflow-x-auto pt-1 pb-1 scrollbar-none">
         <button
-          onClick={() => setActiveSub("sites")}
+          onClick={() => {
+            const params = new URLSearchParams(window.location.search);
+            params.set("sub", "sites");
+            params.delete("inspect");
+            setLocation(window.location.pathname + "?" + params.toString());
+            setActiveSub("sites");
+            setInspectingSiteId(null);
+          }}
           className={`pb-3 text-sm font-medium transition-colors relative whitespace-nowrap flex items-center gap-2 cursor-pointer outline-none ${
             activeSub === "sites"
               ? "text-blue-600 dark:text-blue-400 font-semibold"
@@ -685,7 +725,14 @@ export default function Monitor() {
         </button>
 
         <button
-          onClick={() => setActiveSub("alarms")}
+          onClick={() => {
+            const params = new URLSearchParams(window.location.search);
+            params.set("sub", "alarms");
+            params.delete("inspect");
+            setLocation(window.location.pathname + "?" + params.toString());
+            setActiveSub("alarms");
+            setInspectingSiteId(null);
+          }}
           className={`pb-3 text-sm font-medium transition-colors relative whitespace-nowrap flex items-center gap-2 cursor-pointer outline-none ${
             activeSub === "alarms"
               ? "text-rose-600 dark:text-rose-400 font-semibold"
@@ -999,7 +1046,12 @@ export default function Monitor() {
                         </div>
                       </td>
                       <td className="px-4 py-4 text-right">
-                        <Button variant="outline" size="sm" className="h-7 text-xs font-semibold text-blue-600">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-xs font-semibold text-blue-600 cursor-pointer"
+                          onClick={() => handleInspectSite(item.id)}
+                        >
                           <Eye className="w-3.5 h-3.5 mr-1" /> Inspect
                         </Button>
                       </td>

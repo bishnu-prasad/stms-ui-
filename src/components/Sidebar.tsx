@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -134,21 +134,64 @@ const navSections: NavSection[] = [
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({
-    Dashboard: true,
-    Monitor: true,
-    Config: true,
-    Sites: true,
-    Users: true,
-    Reports: true,
-    Notifications: true,
-  });
   const [location, setLocation] = useLocation();
   const [activeHash, setActiveHash] = useState("#analytics");
   const { theme, setTheme } = useTheme();
 
+  // Helper to determine initial active group based on URL path
+  const getInitialActiveGroup = () => {
+    if (location.startsWith("/analytics")) return "Dashboard";
+    if (location.startsWith("/monitor")) return "Monitor";
+    if (location.startsWith("/config")) return "Config";
+    if (location.startsWith("/sites")) return "Sites";
+    if (location.startsWith("/users")) return "Users";
+    if (location.startsWith("/reports")) return "Reports";
+    if (location.startsWith("/notifications")) return "Notifications";
+    return "Dashboard";
+  };
+
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(() => {
+    const activeGroup = getInitialActiveGroup();
+    return {
+      Dashboard: activeGroup === "Dashboard",
+      Monitor: activeGroup === "Monitor",
+      Config: activeGroup === "Config",
+      Sites: activeGroup === "Sites",
+      Users: activeGroup === "Users",
+      Reports: activeGroup === "Reports",
+      Notifications: activeGroup === "Notifications",
+    };
+  });
+
+  // Automatically update the open menu group when route changes
+  useEffect(() => {
+    const activeGroup = getInitialActiveGroup();
+    setExpandedItems({
+      Dashboard: activeGroup === "Dashboard",
+      Monitor: activeGroup === "Monitor",
+      Config: activeGroup === "Config",
+      Sites: activeGroup === "Sites",
+      Users: activeGroup === "Users",
+      Reports: activeGroup === "Reports",
+      Notifications: activeGroup === "Notifications",
+    });
+  }, [location]);
+
   function toggleExpanded(name: string) {
-    setExpandedItems((prev) => ({ ...prev, [name]: !prev[name] }));
+    setExpandedItems((prev) => {
+      const next = {
+        Dashboard: false,
+        Monitor: false,
+        Config: false,
+        Sites: false,
+        Users: false,
+        Reports: false,
+        Notifications: false,
+      };
+      // Toggle the clicked one, collapse others
+      next[name] = !prev[name];
+      return next;
+    });
   }
 
   function handleNavigate(href?: string) {
@@ -311,11 +354,17 @@ export function Sidebar() {
                           className="pl-4 space-y-1 overflow-hidden"
                         >
                           {children.map((child) => {
-                            const isChildSelected = child.href.startsWith("/")
-                              ? location === child.href.split("?")[0] &&
-                                (!child.href.includes("sub=") ||
-                                  window.location.search.includes(child.href.split("?")[1] || ""))
-                              : activeHash === child.href;
+                            const isChildSelected = (() => {
+                              if (!child.href.startsWith("/")) {
+                                return activeHash === child.href;
+                              }
+                              const [path, search] = child.href.split("?");
+                              if (location !== path) return false;
+                              if (search) {
+                                return window.location.search.includes(search);
+                              }
+                              return !window.location.search;
+                            })();
                             return (
                               <button
                                 key={child.name}

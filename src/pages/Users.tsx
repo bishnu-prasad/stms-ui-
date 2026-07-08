@@ -266,12 +266,17 @@ export default function UsersPage() {
   const [newRoleDesc, setNewRoleDesc] = useState("");
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const tab = searchParams.get("tab");
-    if (tab === "vendors" || tab === "admins" || tab === "roles") {
-      setActiveTab(tab);
-    }
-  }, [location, window.location.search]);
+    const handleUrlChange = () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const tab = searchParams.get("tab");
+      if (tab === "vendors" || tab === "admins" || tab === "roles") {
+        setActiveTab(tab);
+      }
+    };
+    window.addEventListener("popstate", handleUrlChange);
+    handleUrlChange();
+    return () => window.removeEventListener("popstate", handleUrlChange);
+  }, []);
 
   // HANDLER: ADD VENDOR
   const handleAddVendor = (e: React.FormEvent) => {

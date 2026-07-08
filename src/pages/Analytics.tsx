@@ -690,12 +690,17 @@ export default function Analytics() {
   }, []);
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const tab = searchParams.get("tab");
-    if (tab && tabItems.some((t) => t.id === tab)) {
-      setActiveTab(tab);
-    }
-  }, [location, window.location.search]);
+    const handleUrlChange = () => {
+      const searchParams = new URLSearchParams(window.location.search);
+      const tab = searchParams.get("tab");
+      if (tab && tabItems.some((t) => t.id === tab)) {
+        setActiveTab(tab);
+      }
+    };
+    window.addEventListener("popstate", handleUrlChange);
+    handleUrlChange();
+    return () => window.removeEventListener("popstate", handleUrlChange);
+  }, []);
 
   function handleSave() {
     setSaved(true);
