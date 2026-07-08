@@ -8,9 +8,10 @@ import {
   Terminal, 
   Check, 
   Loader2,
-  HardHat,
-  Award,
-  BookOpen
+  Server,
+  Layers,
+  Key,
+  Activity
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,32 +22,32 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-// Mock certifications for Engineer
-const certifications = [
-  { name: "Tower Climbing Safety", issuer: "NOC Safety Board", date: "Expires Dec 2027" },
-  { name: "Electrical Safety Level 3", issuer: "National Power Authority", date: "Expires Jun 2028" },
-  { name: "Huawei BBU Installation", issuer: "Huawei Academy", date: "Lifetime Validity" }
+// Mock Circle Access Permissions for Platform Owner
+const managedNodes = [
+  { name: "Global Edge Nodes", region: "AP-SOUTH-1 / US-EAST-1", level: "Root Access", status: "Operational" },
+  { name: "Tenant Broker Service", region: "AP-SOUTH-1", level: "Administration", status: "Operational" },
+  { name: "API Gateway Manager", region: "GLOBAL", level: "Read/Write Access", status: "Operational" }
 ];
 
-export default function EngineerProfile() {
-  const [firstName, setFirstName] = useState("Alex");
-  const [lastName, setLastName] = useState("Johnson");
+export default function OwnerProfile() {
+  const [firstName, setFirstName] = useState("Arjun");
+  const [lastName, setLastName] = useState("Mehta");
   const [mobile, setMobile] = useState("+91 98765 43210");
-  const [dob, setDob] = useState("14/08/1995");
+  const [dob, setDob] = useState("12/04/1992");
   const [gender, setGender] = useState("male");
   const [access, setAccess] = useState("yes");
   const [view, setView] = useState("ltr");
   const [language, setLanguage] = useState("english");
   const [timezone, setTimezone] = useState("kolkata");
 
-  const [email, setEmail] = useState("alex.j@delta.com");
-  const [designation, setDesignation] = useState("L2 Field Technician");
-  const [organization, setOrganization] = useState("Delta Electronics");
+  const [email, setEmail] = useState("arjun@indionetworks.com");
+  const [designation, setDesignation] = useState("Principal Platform Owner");
+  const [organization, setOrganization] = useState("Indio Networks");
 
-  const [street, setStreet] = useState("Flat 12, Kurla Complex");
-  const [city, setCity] = useState("Mumbai");
+  const [street, setStreet] = useState("Office 402, Supreme Head");
+  const [city, setCity] = useState("Pune");
   const [state, setState] = useState("Maharashtra");
-  const [pin, setPin] = useState("400070");
+  const [pin, setPin] = useState("411045");
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -61,18 +62,18 @@ export default function EngineerProfile() {
   };
 
   return (
-    <div className="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8 pt-6 space-y-6 pb-24">
+    <div className="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8 pt-6 space-y-6">
       
       {/* Page Header */}
       <div>
         <div className="flex items-center gap-2 mb-1 flex-wrap">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Technician Profile</h1>
-          <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-500/20 text-[10px] font-extrabold uppercase py-0.5">
-            Field Operations Credentials
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Admin Profile</h1>
+          <Badge variant="outline" className="bg-indigo-500/10 text-indigo-600 border-indigo-500/20 text-[10px] font-extrabold uppercase py-0.5">
+            Owner Configuration
           </Badge>
         </div>
         <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-          <span>Field Staff</span>
+          <span>Administrator</span>
           <span>&gt;</span>
           <span className="text-foreground font-medium">Profile</span>
         </div>
@@ -83,19 +84,19 @@ export default function EngineerProfile() {
 
         {/* Profile Card (Left) */}
         <Card className="p-5 shadow-2xs flex flex-col justify-between relative overflow-hidden bg-card border border-border">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
           <div className="flex items-start gap-4 relative z-10">
             <div className="relative">
-              <Avatar className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-red-600 flex items-center justify-center text-white text-2xl font-black shadow-md border border-orange-400/20">
-                <AvatarFallback className="bg-transparent text-white font-black">AJ</AvatarFallback>
+              <Avatar className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-black shadow-md border border-indigo-400/20">
+                <AvatarFallback className="bg-transparent text-white font-black">AM</AvatarFallback>
               </Avatar>
               <span className="absolute bottom-1 right-1 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
             </div>
             <div>
               <h2 className="text-base font-black text-foreground leading-tight">{firstName} {lastName}</h2>
               <p className="text-xs text-muted-foreground font-medium mt-1">{email}</p>
-              <Badge className="mt-2.5 bg-orange-500/10 text-orange-600 border border-orange-500/20 tracking-wider text-[10px] font-extrabold uppercase">
-                FIELD ENGINEER
+              <Badge className="mt-2.5 bg-indigo-500/10 text-indigo-600 border border-indigo-500/20 tracking-wider text-[10px] font-extrabold uppercase">
+                SUPER ADMIN
               </Badge>
             </div>
           </div>
@@ -103,23 +104,23 @@ export default function EngineerProfile() {
           {/* Metric Grid */}
           <div className="grid grid-cols-3 gap-3 border-t border-border pt-4 mt-6">
             <div className="text-center p-2.5 bg-muted/30 rounded-xl border border-border">
-              <span className="font-mono text-base font-extrabold text-foreground block">MH-WEST</span>
-              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5 block">Base</span>
+              <span className="font-mono text-base font-extrabold text-foreground block">32</span>
+              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5 block">Tenants</span>
             </div>
             <div className="text-center p-2.5 bg-muted/30 rounded-xl border border-border">
-              <span className="font-mono text-base font-extrabold text-foreground block">15 min</span>
-              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5 block">Avg SLA</span>
+              <span className="font-mono text-base font-extrabold text-foreground block">12</span>
+              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5 block">Integrations</span>
             </div>
             <div className="text-center p-2.5 bg-muted/30 rounded-xl border border-border">
-              <span className="font-mono text-base font-extrabold text-foreground block">98.6%</span>
-              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5 block">Accuracy</span>
+              <span className="font-mono text-base font-extrabold text-foreground block">99.99</span>
+              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5 block">SLA</span>
             </div>
           </div>
 
           {/* Footer Indicators */}
           <div className="flex justify-between items-center border-t border-border pt-4 mt-4 text-[10.5px] font-semibold text-muted-foreground">
             <div className="flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Active Dispatch Clearance
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Active System Owner
             </div>
             <div className="flex items-center gap-1 font-mono text-[9.5px]">
               <span>FORMAT:</span> <span className="text-foreground">{view.toUpperCase()}</span>
@@ -134,15 +135,15 @@ export default function EngineerProfile() {
         <Card className="md:col-span-2 bg-[#0F172A] border border-slate-800 p-5 shadow-sm text-slate-300 font-mono text-xs flex flex-col justify-between relative overflow-hidden">
           <div className="absolute top-0 right-0 w-48 h-48 bg-slate-800/20 rounded-full blur-3xl -mr-16 -mt-16"></div>
           <div>
-            <span className="text-slate-500 block mb-2">// Dispatch Security Clearance Metadata</span>
+            <span className="text-slate-500 block mb-2">// Platform Ownership Metadata</span>
             <div className="space-y-1">
-              <div><span className="text-orange-400">License Class:</span> <span className="text-slate-100">L2 High-Voltage Core Operations</span></div>
-              <div><span className="text-orange-400">Security Clearance:</span> <span className="text-slate-100">Tier 3 Site Entry Allowed</span></div>
-              <div><span className="text-orange-400">Dispatch Eligibility:</span> <span class="text-slate-100">Active (Corrective & Preventive)</span></div>
+              <div><span className="text-indigo-400">Created On:</span> <span className="text-slate-100">2024-05-15 08:32:10</span></div>
+              <div><span className="text-indigo-400">Last Password Change:</span> <span class="text-slate-100">14 days ago</span></div>
+              <div><span className="text-indigo-400">Assigned Access:</span> <span class="text-slate-100">Full Access (Access Control & Resource Orchestration)</span></div>
             </div>
           </div>
           <div className="border-t border-slate-800 pt-4 mt-6 flex justify-between items-center text-[10.5px] text-slate-500">
-            <span>Staff ID Code: EMP-4921</span>
+            <span>Root Admin UID: admin_arjun_99a2c</span>
             <Terminal className="w-4 h-4 text-slate-700" />
           </div>
         </Card>
@@ -164,8 +165,8 @@ export default function EngineerProfile() {
               value="access" 
               className="pb-3 text-xs font-bold transition-all relative whitespace-nowrap cursor-pointer rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-3 uppercase tracking-wider flex items-center gap-1.5"
             >
-              <Award className="w-3.5 h-3.5" />
-              Certifications
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Node Admin Privileges
             </TabsTrigger>
           </TabsList>
         </div>
@@ -238,15 +239,15 @@ export default function EngineerProfile() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide block">Dispatch Eligibility</Label>
+                <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide block">Super Admin Access</Label>
                 <RadioGroup value={access} onValueChange={setAccess} className="flex items-center gap-4 text-xs font-medium text-foreground h-9">
                   <div className="flex items-center space-x-1.5">
                     <RadioGroupItem value="yes" id="a-yes" />
-                    <label htmlFor="a-yes" className="cursor-pointer">Active</label>
+                    <label htmlFor="a-yes" className="cursor-pointer">Allowed</label>
                   </div>
                   <div className="flex items-center space-x-1.5">
                     <RadioGroupItem value="no" id="a-no" />
-                    <label htmlFor="a-no" className="cursor-pointer">Inactive</label>
+                    <label htmlFor="a-no" className="cursor-pointer">Restricted</label>
                   </div>
                 </RadioGroup>
               </div>
@@ -380,7 +381,7 @@ export default function EngineerProfile() {
             <Button 
               onClick={handleUpdate} 
               disabled={saving}
-              className="rounded-xl text-xs font-bold bg-orange-600 hover:bg-orange-700 text-white h-10 px-6 gap-1.5 shadow-md"
+              className="rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white h-10 px-6 gap-1.5 shadow-md"
             >
               {saving ? (
                 <>
@@ -400,26 +401,29 @@ export default function EngineerProfile() {
 
         </TabsContent>
 
-        {/* Tab Content: Certifications */}
+        {/* Tab Content: Access Permissions */}
         <TabsContent value="access" className="p-6 flex flex-col gap-6 outline-none mt-0">
           <div className="space-y-4">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider border-b border-border pb-2 flex items-center gap-2">
-              <BookOpen className="w-4.5 h-4.5 text-orange-500" /> Professional Certifications
-            </h3>
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider border-b border-border pb-2">Global Node Admin Access</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {certifications.map((c, idx) => (
-                <div key={idx} className="p-4 rounded-xl border border-border bg-muted/20 flex flex-col justify-between">
+              {managedNodes.map((c, idx) => (
+                <div key={idx} className="p-4 rounded-xl border border-border bg-muted/20 flex flex-col justify-between h-full">
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-foreground text-xs">{c.name}</span>
+                      <Badge variant="outline" className="text-[9px] font-mono font-bold bg-indigo-500/10 text-indigo-600 border-indigo-500/20 py-0.5">
+                        {c.region}
+                      </Badge>
                     </div>
-                    <div className="text-[11px] font-medium text-muted-foreground mt-1.5">{c.issuer}</div>
+                    <div className="text-[11px] font-medium text-muted-foreground mt-1.5 flex items-center gap-1">
+                      <Key className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                      <span>{c.level}</span>
+                    </div>
                   </div>
                   <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-[10px] text-muted-foreground">
-                    <span className="flex items-center gap-1 font-semibold text-orange-600">
-                      <Award className="w-3.5 h-3.5" /> Valid
+                    <span className="flex items-center gap-1 font-semibold text-emerald-500">
+                      <Activity className="w-3.5 h-3.5" /> {c.status}
                     </span>
-                    <span className="text-[10px] font-semibold text-slate-500">{c.date}</span>
                   </div>
                 </div>
               ))}

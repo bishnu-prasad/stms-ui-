@@ -1,83 +1,427 @@
-import { useState } from "react";
-import { VendorPageTemplate } from "../components/VendorPageTemplate";
-import { VendorMetricCard } from "../components/VendorMetricCard";
-import { VendorChartCard, SimpleVendorBarChart, SimpleVendorLineChart } from "../components/VendorChartCard";
-import { VendorDataTable } from "../components/VendorDataTable";
-import { VendorKanban } from "../components/VendorKanban";
-import { mockVendorJobs } from "../data/vendorMockData";
-import { Wrench, Clock, UserCheck, Boxes } from "lucide-react";
+import React, { useState } from "react";
+import { 
+  User, 
+  ShieldCheck, 
+  CheckCircle2, 
+  Briefcase, 
+  Map, 
+  Terminal, 
+  Check, 
+  Loader2,
+  Wrench,
+  Clock,
+  Boxes
+} from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-export default function ProfilePage() {
-  const [jobsList, setJobsList] = useState(mockVendorJobs);
+// Mock Circle Access Permissions for Vendor
+const vendorCircles = [
+  { name: "Maharashtra Circle", region: "MH-WEST", level: "L1-L3 Support dispatch", status: "Active" },
+  { name: "Gujarat Circle", region: "GJ-WEST", level: "L1-L2 Maintenance", status: "Active" }
+];
 
-  const handleStatusChange = (jobId: string, newStatus: any) => {
-    setJobsList(prev => prev.map(j => j.id === jobId ? { ...j, status: newStatus } : j));
+export default function VendorProfile() {
+  const [firstName, setFirstName] = useState("Delta");
+  const [lastName, setLastName] = useState("Electronics");
+  const [mobile, setMobile] = useState("+91 88888 77777");
+  const [dob, setDob] = useState("10/10/1990");
+  const [gender, setGender] = useState("other");
+  const [access, setAccess] = useState("yes");
+  const [view, setView] = useState("ltr");
+  const [language, setLanguage] = useState("english");
+  const [timezone, setTimezone] = useState("kolkata");
+
+  const [email, setEmail] = useState("field.services@delta.com");
+  const [designation, setDesignation] = useState("Field Operations Manager");
+  const [organization, setOrganization] = useState("Delta Electronics Ltd.");
+
+  const [street, setStreet] = useState("Unit 501, Technopolis");
+  const [city, setCity] = useState("Pune");
+  const [state, setState] = useState("Maharashtra");
+  const [pin, setPin] = useState("411006");
+
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleUpdate = () => {
+    setSaving(true);
+    setTimeout(() => {
+      setSaving(false);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1500);
+    }, 800);
   };
 
-  const kpis = (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-      <VendorMetricCard title="Partner Tier" value="Tier 1" subtitle="Strategic Partner" badgeText="" icon={<Wrench className="w-5 h-5 text-teal-600" />} delay={0.05} />
-      <VendorMetricCard title="Certified Engineers" value="148 Techs" subtitle="Licensed Field Staff" icon={<Clock className="w-5 h-5 text-teal-600" />} delay={0.1} />
-      <VendorMetricCard title="Warranty Coverage" value="Active" subtitle="Until Dec 2028" badgeText="" icon={<UserCheck className="w-5 h-5 text-teal-600" />} delay={0.15} />
-      <VendorMetricCard title="Base Headquarters" value="Pune, IN" subtitle="Central Operations Base" icon={<Boxes className="w-5 h-5 text-teal-600" />} delay={0.2} />
-    </div>
-  );
-
-  const charts = (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <VendorChartCard title="Partner Contract Duration & Renewal" businessQuestion="Contract status: Active with 30 months remaining." delay={0.25}>
-        <SimpleVendorBarChart data={[{"name":"Mon","value":14,"sla":98},{"name":"Tue","value":22,"sla":99},{"name":"Wed","value":18,"sla":97},{"name":"Thu","value":26,"sla":99},{"name":"Fri","value":30,"sla":98},{"name":"Sat","value":16,"sla":100},{"name":"Sun","value":12,"sla":100}]} dataKey="value" categoryKey="name" color="#0D9488" />
-      </VendorChartCard>
-      <VendorChartCard title="SLA Compliance & Response Target Trend" businessQuestion="What is the average response latency across maintenance dispatches?" delay={0.3}>
-        <SimpleVendorLineChart data={[{"name":"Mon","value":14,"sla":98},{"name":"Tue","value":22,"sla":99},{"name":"Wed","value":18,"sla":97},{"name":"Thu","value":26,"sla":99},{"name":"Fri","value":30,"sla":98},{"name":"Sat","value":16,"sla":100},{"name":"Sun","value":12,"sla":100}]} dataKey="sla" categoryKey="name" color="#2563EB" />
-      </VendorChartCard>
-    </div>
-  );
-
-  const extraContent = null;
-
-  const jobColumns = [
-    { header: "Job ID", accessor: (r: any) => <span className="font-mono font-bold text-teal-700">{r.id}</span> },
-    { header: "Title & Issue", accessor: (r: any) => <div><div className="font-bold text-slate-900">{r.title}</div><div className="text-xs text-slate-400">{r.equipment}</div></div> },
-    { header: "Customer & Site", accessor: (r: any) => <div><div className="font-semibold text-teal-800">{r.customerName}</div><div className="text-xs text-slate-500">{r.siteName} ({r.circle})</div></div> },
-    { header: "Priority", accessor: (r: any) => <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${r.priority === 'CRITICAL' ? 'bg-rose-100 text-rose-700' : r.priority === 'HIGH' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>{r.priority}</span> },
-    { header: "Status", accessor: (r: any) => <span className="font-semibold text-slate-700 text-xs px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200">{r.status}</span> },
-    { header: "Engineer", accessor: (r: any) => r.assignedEngineer ? <span className="font-medium text-slate-800">{r.assignedEngineer.name}</span> : <span className="text-amber-600 font-semibold">Unassigned</span> },
-    { header: "SLA Left", accessor: (r: any) => <span className="font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded-md text-xs">{r.slaRemainingMinutes} mins</span> },
-  ];
-
-  const table = (
-    <VendorDataTable
-      columns={jobColumns}
-      data={jobsList}
-    />
-  );
-
-  const recommendations = [
-    {
-      title: "Prioritize Critical Battery Discharge at SATKHANDA Open Plot",
-      detail: "SLA countdown expires in 28 minutes. Rahul Sharma is on site — verify surge suppressor replacement & reset breaker.",
-      actionLabel: "View Critical Ticket"
-    },
-    {
-      title: "Reorder Auto Mains Failure Solenoid Kits",
-      detail: "Stock level at Bikaner base has reached 3 units (below safety buffer of 5). Automated PO generated.",
-      actionLabel: "Review Spare Parts Reorder"
-    }
-  ];
-
   return (
-    <VendorPageTemplate
-      greeting="Partner Credentials"
-      title="Vendor Partner Organization Profile"
-      narrative={`Delta Electronics Field Services Division — Registered STMS Partner. License code DEL-IND-042. SLA tier: Tier 1 Strategic Hardware Partner.`}
-      status="normal"
-      icon={<Wrench className="w-6 h-6 text-teal-600" />}
-      kpis={kpis}
-      charts={charts}
-      extraContent={extraContent}
-      table={table}
-      recommendations={recommendations}
-    />
+    <div className="max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8 pt-6 space-y-6">
+      
+      {/* Page Header */}
+      <div>
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Vendor Profile</h1>
+          <Badge variant="outline" className="bg-teal-500/10 text-teal-600 border-teal-500/20 text-[10px] font-extrabold uppercase py-0.5">
+            Partner Configuration
+          </Badge>
+        </div>
+        <div className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+          <span>Vendor Partner</span>
+          <span>&gt;</span>
+          <span className="text-foreground font-medium">Profile</span>
+        </div>
+      </div>
+
+      {/* Top Cards: Details & Metadata */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        {/* Profile Card (Left) */}
+        <Card className="p-5 shadow-2xs flex flex-col justify-between relative overflow-hidden bg-card border border-border">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+          <div className="flex items-start gap-4 relative z-10">
+            <div className="relative">
+              <Avatar className="w-16 h-16 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center text-white text-2xl font-black shadow-md border border-teal-400/20">
+                <AvatarFallback className="bg-transparent text-white font-black">DE</AvatarFallback>
+              </Avatar>
+              <span className="absolute bottom-1 right-1 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></span>
+            </div>
+            <div>
+              <h2 className="text-base font-black text-foreground leading-tight">{firstName} {lastName}</h2>
+              <p className="text-xs text-muted-foreground font-medium mt-1">{email}</p>
+              <Badge className="mt-2.5 bg-teal-500/10 text-teal-600 border border-teal-500/20 tracking-wider text-[10px] font-extrabold uppercase">
+                VENDOR PARTNER
+              </Badge>
+            </div>
+          </div>
+
+          {/* Metric Grid */}
+          <div className="grid grid-cols-3 gap-3 border-t border-border pt-4 mt-6">
+            <div className="text-center p-2.5 bg-muted/30 rounded-xl border border-border">
+              <span className="font-mono text-base font-extrabold text-foreground block">148</span>
+              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5 block">Techs</span>
+            </div>
+            <div className="text-center p-2.5 bg-muted/30 rounded-xl border border-border">
+              <span className="font-mono text-base font-extrabold text-foreground block">Tier 1</span>
+              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5 block">Tier</span>
+            </div>
+            <div className="text-center p-2.5 bg-muted/30 rounded-xl border border-border">
+              <span className="font-mono text-base font-extrabold text-foreground block">Active</span>
+              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider mt-0.5 block">Warranty</span>
+            </div>
+          </div>
+
+          {/* Footer Indicators */}
+          <div className="flex justify-between items-center border-t border-border pt-4 mt-4 text-[10.5px] font-semibold text-muted-foreground">
+            <div className="flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Active Maintenance Partner
+            </div>
+            <div className="flex items-center gap-1 font-mono text-[9.5px]">
+              <span>FORMAT:</span> <span className="text-foreground">{view.toUpperCase()}</span>
+            </div>
+            <div className="flex items-center gap-1 font-mono text-[9.5px]">
+              <span>LANG:</span> <span className="text-foreground">{language.toUpperCase()}</span>
+            </div>
+          </div>
+        </Card>
+
+        {/* Metadata Card (Right) */}
+        <Card className="md:col-span-2 bg-[#0F172A] border border-slate-800 p-5 shadow-sm text-slate-300 font-mono text-xs flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-slate-800/20 rounded-full blur-3xl -mr-16 -mt-16"></div>
+          <div>
+            <span className="text-slate-500 block mb-2">// Vendor Agreement Metadata</span>
+            <div className="space-y-1">
+              <div><span className="text-teal-400">Agreement Date:</span> <span className="text-slate-100">2023-01-10 09:00:00</span></div>
+              <div><span className="text-teal-400">Agreement Term:</span> <span className="text-slate-100">60 Months</span></div>
+              <div><span className="text-teal-400">Access Level:</span> <span class="text-slate-100">Regional Dispatch Clearance</span></div>
+            </div>
+          </div>
+          <div className="border-t border-slate-800 pt-4 mt-6 flex justify-between items-center text-[10.5px] text-slate-500">
+            <span>Vendor License UID: license_delta_501</span>
+            <Terminal className="w-4 h-4 text-slate-700" />
+          </div>
+        </Card>
+
+      </div>
+
+      {/* Tabs Layout */}
+      <Tabs defaultValue="basic" className="bg-card border border-border rounded-2xl shadow-2xs overflow-hidden">
+        <div className="border-b border-border bg-muted/20 px-6 pt-3">
+          <TabsList className="bg-transparent h-auto p-0 gap-6">
+            <TabsTrigger 
+              value="basic" 
+              className="pb-3 text-xs font-bold transition-all relative whitespace-nowrap cursor-pointer rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-3 uppercase tracking-wider flex items-center gap-1.5"
+            >
+              <Briefcase className="w-3.5 h-3.5" />
+              Basic Info
+            </TabsTrigger>
+            <TabsTrigger 
+              value="access" 
+              className="pb-3 text-xs font-bold transition-all relative whitespace-nowrap cursor-pointer rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-3 uppercase tracking-wider flex items-center gap-1.5"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Regional Scope
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        {/* Tab Content: Basic Info */}
+        <TabsContent value="basic" className="p-6 flex flex-col gap-8 outline-none mt-0">
+          
+          {/* Personal Info */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider border-b border-border pb-2 flex items-center gap-2">
+              <User className="w-4 h-4 text-muted-foreground" /> Contact Information
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="space-y-1.5">
+                <Label htmlFor="first-name" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">First Name</Label>
+                <Input 
+                  id="first-name" 
+                  value={firstName} 
+                  onChange={(e) => setFirstName(e.target.value)} 
+                  className="h-10 rounded-xl text-xs font-medium bg-muted/20 border-border" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="last-name" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Last Name</Label>
+                <Input 
+                  id="last-name" 
+                  value={lastName} 
+                  onChange={(e) => setLastName(e.target.value)} 
+                  className="h-10 rounded-xl text-xs font-medium bg-muted/20 border-border" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="mobile" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Mobile</Label>
+                <Input 
+                  id="mobile" 
+                  value={mobile} 
+                  onChange={(e) => setMobile(e.target.value)} 
+                  className="h-10 rounded-xl text-xs font-medium bg-muted/20 border-border" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="dob" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">DOB</Label>
+                <Input 
+                  id="dob" 
+                  value={dob} 
+                  onChange={(e) => setDob(e.target.value)} 
+                  className="h-10 rounded-xl text-xs font-medium bg-muted/20 border-border" 
+                />
+              </div>
+            </div>
+
+            {/* Custom Choices */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-2">
+              <div className="space-y-2">
+                <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide block">Gender</Label>
+                <RadioGroup value={gender} onValueChange={setGender} className="flex items-center gap-4 text-xs font-medium text-foreground h-9">
+                  <div className="flex items-center space-x-1.5">
+                    <RadioGroupItem value="male" id="g-male" />
+                    <label htmlFor="g-male" className="cursor-pointer">Male</label>
+                  </div>
+                  <div className="flex items-center space-x-1.5">
+                    <RadioGroupItem value="female" id="g-female" />
+                    <label htmlFor="g-female" className="cursor-pointer">Female</label>
+                  </div>
+                  <div className="flex items-center space-x-1.5">
+                    <RadioGroupItem value="other" id="g-other" />
+                    <label htmlFor="g-other" className="cursor-pointer">Other</label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide block">Partner Dispatch</Label>
+                <RadioGroup value={access} onValueChange={setAccess} className="flex items-center gap-4 text-xs font-medium text-foreground h-9">
+                  <div className="flex items-center space-x-1.5">
+                    <RadioGroupItem value="yes" id="a-yes" />
+                    <label htmlFor="a-yes" className="cursor-pointer">Active</label>
+                  </div>
+                  <div className="flex items-center space-x-1.5">
+                    <RadioGroupItem value="no" id="a-no" />
+                    <label htmlFor="a-no" className="cursor-pointer">Restricted</label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide block">View Format</Label>
+                <RadioGroup value={view} onValueChange={setView} className="flex items-center gap-4 text-xs font-medium text-foreground h-9">
+                  <div className="flex items-center space-x-1.5">
+                    <RadioGroupItem value="ltr" id="v-ltr" />
+                    <label htmlFor="v-ltr" className="cursor-pointer">LTR</label>
+                  </div>
+                  <div className="flex items-center space-x-1.5">
+                    <RadioGroupItem value="rtl" id="v-rtl" />
+                    <label htmlFor="v-rtl" className="cursor-pointer">RTL</label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide block">Language</Label>
+                  <select 
+                    value={language} 
+                    onChange={(e) => setLanguage(e.target.value)}
+                    className="w-full h-10 px-2 bg-card border border-border text-foreground rounded-xl focus:border-primary outline-none text-xs font-semibold cursor-pointer"
+                  >
+                    <option value="english">English</option>
+                    <option value="spanish">Spanish</option>
+                    <option value="hindi">Hindi</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide block">Timezone</Label>
+                  <select 
+                    value={timezone} 
+                    onChange={(e) => setTimezone(e.target.value)}
+                    className="w-full h-10 px-2 bg-card border border-border text-foreground rounded-xl focus:border-primary outline-none text-xs font-semibold cursor-pointer"
+                  >
+                    <option value="kolkata">Asia/Kolkata</option>
+                    <option value="utc">UTC</option>
+                    <option value="est">America/New_York</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Work Info */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider border-b border-border pb-2 flex items-center gap-2">
+              <Briefcase className="w-4 h-4 text-muted-foreground" /> Work Information
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              <div className="space-y-1.5">
+                <Label htmlFor="work-email" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Work Email</Label>
+                <Input 
+                  id="work-email" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  className="h-10 rounded-xl text-xs font-medium bg-muted/20 border-border" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="designation" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Designation</Label>
+                <Input 
+                  id="designation" 
+                  value={designation} 
+                  onChange={(e) => setDesignation(e.target.value)} 
+                  className="h-10 rounded-xl text-xs font-medium bg-muted/20 border-border" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="organization" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Organization</Label>
+                <Input 
+                  id="organization" 
+                  value={organization} 
+                  onChange={(e) => setOrganization(e.target.value)} 
+                  className="h-10 rounded-xl text-xs font-medium bg-muted/20 border-border" 
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Address */}
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider border-b border-border pb-2 flex items-center gap-2">
+              <Map className="w-4 h-4 text-muted-foreground" /> Addresses
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="street" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">Street Address</Label>
+                <Input 
+                  id="street" 
+                  value={street} 
+                  onChange={(e) => setStreet(e.target.value)} 
+                  className="h-10 rounded-xl text-xs font-medium bg-muted/20 border-border" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="city" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">City</Label>
+                <Input 
+                  id="city" 
+                  value={city} 
+                  onChange={(e) => setCity(e.target.value)} 
+                  className="h-10 rounded-xl text-xs font-medium bg-muted/20 border-border" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="state" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">State</Label>
+                <Input 
+                  id="state" 
+                  value={state} 
+                  onChange={(e) => setState(e.target.value)} 
+                  className="h-10 rounded-xl text-xs font-medium bg-muted/20 border-border" 
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="pin" className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide">PIN Code</Label>
+                <Input 
+                  id="pin" 
+                  value={pin} 
+                  onChange={(e) => setPin(e.target.value)} 
+                  className="h-10 rounded-xl text-xs font-medium bg-muted/20 border-border" 
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Action Button */}
+          <div className="flex justify-end pt-4 border-t border-border">
+            <Button 
+              onClick={handleUpdate} 
+              disabled={saving}
+              className="rounded-xl text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white h-10 px-6 gap-1.5 shadow-md"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Saving...
+                </>
+              ) : saved ? (
+                <>
+                  <Check className="w-4 h-4" /> Saved!
+                </>
+              ) : (
+                <>
+                  <Check className="w-4 h-4" /> Update Details
+                </>
+              )}
+            </Button>
+          </div>
+
+        </TabsContent>
+
+        {/* Tab Content: Scope Circles */}
+        <TabsContent value="access" className="p-6 flex flex-col gap-6 outline-none mt-0">
+          <div className="space-y-4">
+            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider border-b border-border pb-2">Assigned Circles</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {vendorCircles.map((c, idx) => (
+                <div key={idx} className="p-4 rounded-xl border border-border bg-muted/20 flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-foreground text-xs">{c.name}</span>
+                      <Badge variant="outline" className="text-[9px] font-mono font-bold bg-teal-500/10 text-teal-600 border-teal-500/20 py-0.5">
+                        {c.region}
+                      </Badge>
+                    </div>
+                    <div className="text-[11px] font-medium text-muted-foreground mt-1">{c.level}</div>
+                  </div>
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)] mt-1.5" title="Connected"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

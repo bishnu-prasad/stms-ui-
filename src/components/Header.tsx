@@ -75,6 +75,26 @@ export function Header() {
                 <span className="block font-bold text-slate-900 dark:text-slate-100">Reliance Jio</span>
                 <span className="block text-[10px] font-mono text-slate-400">admin@indionetworks.com</span>
               </div>
+              <div className="py-1">
+                <button
+                  onClick={() => {
+                    setIsProfileOpen(false);
+                    setLocation("/profile");
+                  }}
+                  className="w-full text-left px-3 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-muted font-semibold flex items-center gap-2 cursor-pointer"
+                >
+                  <User className="w-4 h-4 text-slate-400" /> My Profile
+                </button>
+                <button
+                  onClick={() => {
+                    setIsProfileOpen(false);
+                    setLocation("/notifications");
+                  }}
+                  className="w-full text-left px-3 py-2 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-muted font-semibold flex items-center gap-2 cursor-pointer"
+                >
+                  <Bell className="w-4 h-4 text-slate-400" /> Notifications
+                </button>
+              </div>
               <button
                 onClick={handleLogout}
                 className="w-full text-left px-3 py-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-semibold flex items-center gap-2 cursor-pointer border-t border-slate-100 dark:border-slate-800"

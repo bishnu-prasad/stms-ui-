@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { Search, Bell, Settings, LogOut, ChevronDown, ShieldCheck, Activity, Globe, Command } from "lucide-react";
+import { Search, Bell, Settings, LogOut, ChevronDown, ShieldCheck, Activity, Globe, Command, User } from "lucide-react";
 import { platformSystemInfo } from "../data/mockData";
 
 export function SuperAdminHeader() {
@@ -59,7 +59,13 @@ export function SuperAdminHeader() {
                 <div className="text-xs font-bold text-slate-900">Arjun Mehta (Root)</div>
                 <div className="text-[11px] text-slate-400 mt-0.5">root@indionetworks.com</div>
               </div>
-              <div className="py-1">
+              <div class="py-1">
+                <button
+                  onClick={() => { setShowProfile(false); setLocation("/super-admin/profile"); }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+                >
+                  <User className="w-3.5 h-3.5 text-slate-400" /> My Profile
+                </button>
                 <button
                   onClick={() => { setShowProfile(false); setLocation("/super-admin/settings"); }}
                   className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"

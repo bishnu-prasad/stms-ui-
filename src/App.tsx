@@ -34,6 +34,7 @@ import Users from "@/pages/Users";
 import Reports from "@/pages/Reports";
 import Notifications from "@/pages/Notifications";
 import Login from "@/pages/Login";
+import CustomerProfile from "@/pages/Profile";
 
 // Platform Admin Pages
 import OwnerOverview from "@/owner/pages/Overview";
@@ -48,6 +49,7 @@ import OwnerSites from "@/owner/pages/Sites";
 import OwnerAuditLogs from "@/owner/pages/AuditLogs";
 import OwnerSystem from "@/owner/pages/System";
 import OwnerSettings from "@/owner/pages/Settings";
+import OwnerProfile from "@/owner/pages/Profile";
 
 // Super Admin Portal Pages & Layout
 import DashboardPage from "@/super-admin/pages/Enterprise/Dashboard";
@@ -90,6 +92,7 @@ import ConfigAuditPage from "@/super-admin/pages/Audit/Config";
 import SystemSettingsPage from "@/super-admin/pages/Settings/index";
 import NotificationsPage from "@/super-admin/pages/Settings/Notifications";
 import IntegrationsPage from "@/super-admin/pages/Settings/Integrations";
+import SuperAdminProfile from "@/super-admin/pages/Profile";
 import SuperAdminLogin from "@/super-admin/pages/Login";
 
 // Vendor Portal Layout & Pages
@@ -214,6 +217,7 @@ function AppRouter() {
       <Route path="/super-admin/settings"><SuperAdminLayout><SystemSettingsPage /></SuperAdminLayout></Route>
       <Route path="/super-admin/settings/notifications"><SuperAdminLayout><NotificationsPage /></SuperAdminLayout></Route>
       <Route path="/super-admin/settings/integrations"><SuperAdminLayout><IntegrationsPage /></SuperAdminLayout></Route>
+      <Route path="/super-admin/profile"><SuperAdminLayout><SuperAdminProfile /></SuperAdminLayout></Route>
 
       <Route path="/super-admin">
         <SuperAdminLayout><DashboardPage /></SuperAdminLayout>
@@ -261,6 +265,9 @@ function AppRouter() {
       </Route>
       <Route path="/owner/settings">
         <OwnerLayout><OwnerSettings /></OwnerLayout>
+      </Route>
+      <Route path="/owner/profile">
+        <OwnerLayout><OwnerProfile /></OwnerLayout>
       </Route>
       <Route path="/owner">
         <OwnerLayout><OwnerOverview /></OwnerLayout>
@@ -337,6 +344,9 @@ function AppRouter() {
       </Route>
       <Route path="/sites">
         <Layout><Sites /></Layout>
+      </Route>
+      <Route path="/profile">
+        <Layout><CustomerProfile /></Layout>
       </Route>
 
       {/* ── 404 Fallback ─────────────────────────────────── */}

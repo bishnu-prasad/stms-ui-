@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import {
-  Search, Bell, ChevronDown, LogOut, UserCog, Command,
+  Search, Bell, ChevronDown, LogOut, User, UserCog, Command,
 } from "lucide-react";
 import { platformNotifications } from "../data/ownerMockData";
 
@@ -231,13 +231,19 @@ export function OwnerHeader() {
                   <div className="text-[10px] font-semibold text-slate-500 mt-0.5">Super Admin</div>
                 </div>
                 <button
-                  onClick={() => setLocation("/owner/settings")}
+                  onClick={() => { setShowProfile(false); setLocation("/owner/profile"); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 cursor-pointer"
+                >
+                  <User className="w-3.5 h-3.5" /> My Profile
+                </button>
+                <button
+                  onClick={() => { setShowProfile(false); setLocation("/owner/settings"); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
                   <UserCog className="w-3.5 h-3.5" /> Settings
                 </button>
                 <button
-                  onClick={() => setLocation("/login")}
+                  onClick={() => { setShowProfile(false); setLocation("/login"); }}
                   className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-500 hover:bg-slate-50 border-t border-slate-100 cursor-pointer"
                 >
                   <LogOut className="w-3.5 h-3.5" /> Sign Out
