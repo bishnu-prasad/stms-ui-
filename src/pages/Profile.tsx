@@ -156,13 +156,6 @@ export default function Profile() {
               <Briefcase className="w-3.5 h-3.5" />
               Basic Info
             </TabsTrigger>
-            <TabsTrigger 
-              value="access" 
-              className="pb-3 text-xs font-bold transition-all relative whitespace-nowrap cursor-pointer rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-3 uppercase tracking-wider flex items-center gap-1.5"
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Access Permissions
-            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -394,30 +387,6 @@ export default function Profile() {
             </Button>
           </div>
 
-        </TabsContent>
-
-        {/* Tab Content: Access Permissions */}
-        <TabsContent value="access" className="p-6 flex flex-col gap-6 outline-none mt-0">
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider border-b border-border pb-2">Circle Access Privileges</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {accessCircles.map((c, idx) => (
-                <div key={idx} className="p-4 rounded-xl border border-border bg-muted/20 flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-foreground text-xs">{c.name}</span>
-                      <Badge variant="outline" className="text-[9px] font-mono font-bold bg-blue-500/10 text-blue-600 border-blue-500/20 py-0.5">
-                        {c.code}
-                      </Badge>
-                    </div>
-                    <div className="text-[11px] font-medium text-muted-foreground mt-1">{c.level}</div>
-                    <div className="text-[10px] text-muted-foreground/80 mt-2">{c.activeSites} Sites Managed</div>
-                  </div>
-                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)] mt-1.5" title="Connected"></div>
-                </div>
-              ))}
-            </div>
-          </div>
         </TabsContent>
       </Tabs>
     </div>

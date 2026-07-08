@@ -261,6 +261,16 @@ export default function UsersPage() {
   const [newView, setNewView] = useState<"LTR" | "RTL">("LTR");
   const [newStatus, setNewStatus] = useState<"Active" | "Inactive">("Active");
 
+  // Premium additional fields
+  const [newFirstName, setNewFirstName] = useState("");
+  const [newLastName, setNewLastName] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newAccess, setNewAccess] = useState(true);
+  const [newLanguage, setNewLanguage] = useState("English");
+  const [newTimezone, setNewTimezone] = useState("(GMT+05:30) Chennai, Kolkata, Mumbai, New Delhi");
+  const [newDateFormat, setNewDateFormat] = useState("YYYY-MM-DD");
+  const [newLocation, setNewLocation] = useState("All Locations");
+
   // ROLE FORM INPUTS
   const [newRoleTitle, setNewRoleTitle] = useState("");
   const [newRoleDesc, setNewRoleDesc] = useState("");
@@ -281,10 +291,10 @@ export default function UsersPage() {
   // HANDLER: ADD VENDOR
   const handleAddVendor = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim() || !newEmail.trim()) return;
+    if (!newEmail.trim()) return;
 
-    const initials = newName
-      .trim()
+    const fullName = `${newFirstName.trim()} ${newLastName.trim()}`.trim() || newName.trim() || "New Vendor";
+    const initials = fullName
       .split(" ")
       .map((n) => n[0])
       .join("")
@@ -293,11 +303,11 @@ export default function UsersPage() {
 
     const newRecord: UserAccount = {
       id: `v-${Date.now()}`,
-      name: newName.trim(),
+      name: fullName,
       email: newEmail.trim(),
-      access: true,
+      access: newAccess,
       view: newView,
-      language: "English",
+      language: newLanguage,
       status: newStatus,
       roleType: "Vendor",
       initials,
@@ -306,16 +316,24 @@ export default function UsersPage() {
     setVendors([newRecord, ...vendors]);
     setNewName("");
     setNewEmail("");
+    setNewFirstName("");
+    setNewLastName("");
+    setNewPassword("");
+    setNewAccess(true);
+    setNewLanguage("English");
+    setNewTimezone("(GMT+05:30) Chennai, Kolkata, Mumbai, New Delhi");
+    setNewDateFormat("YYYY-MM-DD");
+    setNewLocation("All Locations");
     setIsAddVendorModalOpen(false);
   };
 
   // HANDLER: ADD ADMIN
   const handleAddAdmin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim() || !newEmail.trim()) return;
+    if (!newEmail.trim()) return;
 
-    const initials = newName
-      .trim()
+    const fullName = `${newFirstName.trim()} ${newLastName.trim()}`.trim() || newName.trim() || "New Admin";
+    const initials = fullName
       .split(" ")
       .map((n) => n[0])
       .join("")
@@ -324,11 +342,11 @@ export default function UsersPage() {
 
     const newRecord: UserAccount = {
       id: `a-${Date.now()}`,
-      name: newName.trim(),
+      name: fullName,
       email: newEmail.trim(),
-      access: true,
+      access: newAccess,
       view: newView,
-      language: "English",
+      language: newLanguage,
       status: newStatus,
       roleType: "Admin",
       initials,
@@ -337,6 +355,14 @@ export default function UsersPage() {
     setAdmins([newRecord, ...admins]);
     setNewName("");
     setNewEmail("");
+    setNewFirstName("");
+    setNewLastName("");
+    setNewPassword("");
+    setNewAccess(true);
+    setNewLanguage("English");
+    setNewTimezone("(GMT+05:30) Chennai, Kolkata, Mumbai, New Delhi");
+    setNewDateFormat("YYYY-MM-DD");
+    setNewLocation("All Locations");
     setIsAddAdminModalOpen(false);
   };
 
@@ -991,88 +1017,229 @@ export default function UsersPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-2xl p-6 shadow-xl w-full max-w-md"
+            className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-2xl p-6 shadow-xl w-full max-w-2xl overflow-y-auto max-h-[90vh]"
           >
-            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <Users className="w-4 h-4 text-blue-600" /> Add New Vendor Account
+            <div className="flex items-center justify-between mb-5 border-b border-slate-100 dark:border-slate-800 pb-3.5">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                  <Users className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="block font-bold">Add New Vendor Account</span>
+                  <span className="text-[10px] text-slate-400 font-medium block">Configure profile fields, localizations, and permissions</span>
+                </div>
               </h3>
               <button
                 onClick={() => setIsAddVendorModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-md"
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md hover:bg-slate-50 dark:hover:bg-slate-900 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleAddVendor} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Vendor Name
-                </label>
-                <Input
-                  required
-                  placeholder="e.g. Rajesh Telecom Services"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  className="h-9 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Email Address
-                </label>
-                <Input
-                  required
-                  type="email"
-                  placeholder="e.g. rajesh@vendor.com"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  className="h-9 text-xs"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* First Name & Last Name */}
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    View Mode
-                  </label>
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">First Name</label>
+                  <Input
+                    required
+                    placeholder="e.g. Rajesh"
+                    value={newFirstName}
+                    onChange={(e) => setNewFirstName(e.target.value)}
+                    className="h-9 text-xs rounded-xl bg-slate-50/50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Last Name</label>
+                  <Input
+                    required
+                    placeholder="e.g. Kumar"
+                    value={newLastName}
+                    onChange={(e) => setNewLastName(e.target.value)}
+                    className="h-9 text-xs rounded-xl bg-slate-50/50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                  />
+                </div>
+
+                {/* Email & Password */}
+                <div>
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Email / Username</label>
+                  <Input
+                    required
+                    type="email"
+                    placeholder="e.g. rajesh@vendor.com"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    className="h-9 text-xs rounded-xl bg-slate-50/50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Password</label>
+                  <Input
+                    required
+                    type="password"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="h-9 text-xs rounded-xl bg-slate-50/50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                  />
+                </div>
+
+                {/* Location & Language */}
+                <div>
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Location scope</label>
                   <select
-                    value={newView}
-                    onChange={(e: any) => setNewView(e.target.value)}
-                    className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-medium outline-none"
+                    value={newLocation}
+                    onChange={(e) => setNewLocation(e.target.value)}
+                    className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-xs font-medium outline-none"
                   >
-                    <option value="LTR">LTR</option>
-                    <option value="RTL">RTL</option>
+                    <option value="All Locations">All Locations</option>
+                    <option value="Maharashtra">Maharashtra</option>
+                    <option value="Rajasthan">Rajasthan</option>
+                    <option value="Uttar Pradesh">Uttar Pradesh</option>
+                    <option value="Telangana">Telangana</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Language</label>
+                  <select
+                    value={newLanguage}
+                    onChange={(e) => setNewLanguage(e.target.value)}
+                    className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-xs font-medium outline-none"
+                  >
+                    <option value="English">English (United States)</option>
+                    <option value="Hindi">Hindi (India)</option>
+                    <option value="Spanish">Spanish (Spain)</option>
+                    <option value="German">German (Germany)</option>
                   </select>
                 </div>
 
+                {/* Date Format & Timezone */}
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Status
-                  </label>
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Date Format</label>
                   <select
-                    value={newStatus}
-                    onChange={(e: any) => setNewStatus(e.target.value)}
-                    className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-medium outline-none"
+                    value={newDateFormat}
+                    onChange={(e) => setNewDateFormat(e.target.value)}
+                    className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-xs font-medium outline-none"
                   >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
+                    <option value="YYYY-MM-DD">YYYY-MM-DD (e.g. 2026-07-08)</option>
+                    <option value="DD-MM-YYYY">DD-MM-YYYY (e.g. 08-07-2026)</option>
+                    <option value="MM/DD/YYYY">MM/DD/YYYY (e.g. 07/08/2026)</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">TimeZone</label>
+                  <select
+                    value={newTimezone}
+                    onChange={(e) => setNewTimezone(e.target.value)}
+                    className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-xs font-medium outline-none"
+                  >
+                    <option value="(GMT+05:30) Chennai, Kolkata, Mumbai, New Delhi">(GMT+05:30) Mumbai, New Delhi</option>
+                    <option value="(GMT-05:00) Eastern Time (US & Canada)">(GMT-05:00) Eastern Time (US)</option>
+                    <option value="(GMT+00:00) Greenwich Mean Time (London)">(GMT+00:00) GMT (London)</option>
+                    <option value="(GMT+08:00) Beijing, Singapore">(GMT+08:00) Singapore</option>
+                  </select>
+                </div>
+
+                {/* Access, Status & View Mode */}
+                <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Access Permission</label>
+                    <div className="grid grid-cols-2 gap-1 bg-slate-100/80 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setNewAccess(true)}
+                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          newAccess
+                            ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-xs"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
+                      >
+                        Grant
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewAccess(false)}
+                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          !newAccess
+                            ? "bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-xs"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
+                      >
+                        Revoke
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Status</label>
+                    <div className="grid grid-cols-2 gap-1 bg-slate-100/80 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setNewStatus("Active")}
+                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          newStatus === "Active"
+                            ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
+                      >
+                        Active
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewStatus("Inactive")}
+                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          newStatus === "Inactive"
+                            ? "bg-white dark:bg-slate-800 text-slate-500 shadow-xs font-extrabold"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
+                      >
+                        Inactive
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">View Layout</label>
+                    <div className="grid grid-cols-2 gap-1 bg-slate-100/80 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setNewView("LTR")}
+                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          newView === "LTR"
+                            ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
+                      >
+                        LTR
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewView("RTL")}
+                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          newView === "RTL"
+                            ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
+                      >
+                        RTL
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setIsAddVendorModalOpen(false)}
+                  className="rounded-lg text-xs"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" size="sm" className="bg-blue-600 text-white font-semibold">
+                <Button type="submit" size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-xs">
                   Save Vendor
                 </Button>
               </div>
@@ -1090,88 +1257,229 @@ export default function UsersPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-2xl p-6 shadow-xl w-full max-w-md"
+            className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-2xl p-6 shadow-xl w-full max-w-2xl overflow-y-auto max-h-[90vh]"
           >
-            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-purple-600" /> Add New Administrator
+            <div className="flex items-center justify-between mb-5 border-b border-slate-100 dark:border-slate-800 pb-3.5">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="block font-bold">Add New Administrator</span>
+                  <span className="text-[10px] text-slate-400 font-medium block">Configure administrative credentials, localizations, and permissions</span>
+                </div>
               </h3>
               <button
                 onClick={() => setIsAddAdminModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-md"
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md hover:bg-slate-50 dark:hover:bg-slate-900 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleAddAdmin} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Admin Name
-                </label>
-                <Input
-                  required
-                  placeholder="e.g. Vikram Sharma"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  className="h-9 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Email Address
-                </label>
-                <Input
-                  required
-                  type="email"
-                  placeholder="e.g. vikram@atc.com"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  className="h-9 text-xs"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* First Name & Last Name */}
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    View Mode
-                  </label>
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">First Name</label>
+                  <Input
+                    required
+                    placeholder="e.g. Vikram"
+                    value={newFirstName}
+                    onChange={(e) => setNewFirstName(e.target.value)}
+                    className="h-9 text-xs rounded-xl bg-slate-50/50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Last Name</label>
+                  <Input
+                    required
+                    placeholder="e.g. Sharma"
+                    value={newLastName}
+                    onChange={(e) => setNewLastName(e.target.value)}
+                    className="h-9 text-xs rounded-xl bg-slate-50/50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                  />
+                </div>
+
+                {/* Email & Password */}
+                <div>
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Email / Username</label>
+                  <Input
+                    required
+                    type="email"
+                    placeholder="e.g. vikram@atc.com"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    className="h-9 text-xs rounded-xl bg-slate-50/50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Password</label>
+                  <Input
+                    required
+                    type="password"
+                    placeholder="••••••••"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="h-9 text-xs rounded-xl bg-slate-50/50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                  />
+                </div>
+
+                {/* Location & Language */}
+                <div>
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Location scope</label>
                   <select
-                    value={newView}
-                    onChange={(e: any) => setNewView(e.target.value)}
-                    className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-medium outline-none"
+                    value={newLocation}
+                    onChange={(e) => setNewLocation(e.target.value)}
+                    className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-xs font-medium outline-none"
                   >
-                    <option value="LTR">LTR</option>
-                    <option value="RTL">RTL</option>
+                    <option value="All Locations">All Locations</option>
+                    <option value="Maharashtra">Maharashtra</option>
+                    <option value="Rajasthan">Rajasthan</option>
+                    <option value="Uttar Pradesh">Uttar Pradesh</option>
+                    <option value="Telangana">Telangana</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Language</label>
+                  <select
+                    value={newLanguage}
+                    onChange={(e) => setNewLanguage(e.target.value)}
+                    className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-xs font-medium outline-none"
+                  >
+                    <option value="English">English (United States)</option>
+                    <option value="Hindi">Hindi (India)</option>
+                    <option value="Spanish">Spanish (Spain)</option>
+                    <option value="German">German (Germany)</option>
                   </select>
                 </div>
 
+                {/* Date Format & Timezone */}
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Status
-                  </label>
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">Date Format</label>
                   <select
-                    value={newStatus}
-                    onChange={(e: any) => setNewStatus(e.target.value)}
-                    className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-medium outline-none"
+                    value={newDateFormat}
+                    onChange={(e) => setNewDateFormat(e.target.value)}
+                    className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-xs font-medium outline-none"
                   >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
+                    <option value="YYYY-MM-DD">YYYY-MM-DD (e.g. 2026-07-08)</option>
+                    <option value="DD-MM-YYYY">DD-MM-YYYY (e.g. 08-07-2026)</option>
+                    <option value="MM/DD/YYYY">MM/DD/YYYY (e.g. 07/08/2026)</option>
                   </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1">TimeZone</label>
+                  <select
+                    value={newTimezone}
+                    onChange={(e) => setNewTimezone(e.target.value)}
+                    className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-xs font-medium outline-none"
+                  >
+                    <option value="(GMT+05:30) Chennai, Kolkata, Mumbai, New Delhi">(GMT+05:30) Mumbai, New Delhi</option>
+                    <option value="(GMT-05:00) Eastern Time (US & Canada)">(GMT-05:00) Eastern Time (US)</option>
+                    <option value="(GMT+00:00) Greenwich Mean Time (London)">(GMT+00:00) GMT (London)</option>
+                    <option value="(GMT+08:00) Beijing, Singapore">(GMT+08:00) Singapore</option>
+                  </select>
+                </div>
+
+                {/* Access, Status & View Mode */}
+                <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Access Permission</label>
+                    <div className="grid grid-cols-2 gap-1 bg-slate-100/80 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setNewAccess(true)}
+                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          newAccess
+                            ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-xs"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
+                      >
+                        Grant
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewAccess(false)}
+                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          !newAccess
+                            ? "bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-xs"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
+                      >
+                        Revoke
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Status</label>
+                    <div className="grid grid-cols-2 gap-1 bg-slate-100/80 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setNewStatus("Active")}
+                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          newStatus === "Active"
+                            ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
+                      >
+                        Active
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewStatus("Inactive")}
+                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          newStatus === "Inactive"
+                            ? "bg-white dark:bg-slate-800 text-slate-500 shadow-xs font-extrabold"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
+                      >
+                        Inactive
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">View Layout</label>
+                    <div className="grid grid-cols-2 gap-1 bg-slate-100/80 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                      <button
+                        type="button"
+                        onClick={() => setNewView("LTR")}
+                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          newView === "LTR"
+                            ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
+                      >
+                        LTR
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewView("RTL")}
+                        className={`py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                          newView === "RTL"
+                            ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs"
+                            : "text-slate-500 hover:text-slate-800"
+                        }`}
+                      >
+                        RTL
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setIsAddAdminModalOpen(false)}
+                  className="rounded-lg text-xs"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" size="sm" className="bg-blue-600 text-white font-semibold">
+                <Button type="submit" size="sm" className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-lg shadow-xs">
                   Save Admin
                 </Button>
               </div>

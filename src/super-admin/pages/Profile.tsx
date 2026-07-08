@@ -161,13 +161,6 @@ export default function SuperAdminProfile() {
               <Briefcase className="w-3.5 h-3.5" />
               Basic Info
             </TabsTrigger>
-            <TabsTrigger 
-              value="access" 
-              className="pb-3 text-xs font-bold transition-all relative whitespace-nowrap cursor-pointer rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary px-3 uppercase tracking-wider flex items-center gap-1.5"
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              System Permissions
-            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -399,33 +392,6 @@ export default function SuperAdminProfile() {
             </Button>
           </div>
 
-        </TabsContent>
-
-        {/* Tab Content: Access Permissions */}
-        <TabsContent value="access" className="p-6 flex flex-col gap-6 outline-none mt-0">
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider border-b border-border pb-2">Global System Privileges</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {globalSystemPrivileges.map((c, idx) => (
-                <div key={idx} className="p-4 rounded-xl border border-border bg-muted/20 flex flex-col justify-between h-full">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-foreground text-xs">{c.name}</span>
-                      <Badge variant="outline" className="text-[9px] font-mono font-bold bg-blue-500/10 text-blue-600 border-blue-500/20 py-0.5">
-                        {c.domain}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-[10px] text-muted-foreground">
-                    <span className="flex items-center gap-1 font-semibold text-emerald-500">
-                      <Activity className="w-3.5 h-3.5" /> {c.status}
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{c.level}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </TabsContent>
       </Tabs>
     </div>

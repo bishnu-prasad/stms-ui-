@@ -93,6 +93,7 @@ export default function Config() {
   const [isAddLocModalOpen, setIsAddLocModalOpen] = useState(false);
   const [newLocName, setNewLocName] = useState("");
   const [newLocType, setNewLocType] = useState<"zone" | "cluster" | "circle">("cluster");
+  const [newLocParent, setNewLocParent] = useState("No Parent (Root Level)");
 
   // CATEGORIES STATE
   const [categories, setCategories] = useState<CategoryItem[]>(initialCategories);
@@ -607,59 +608,127 @@ export default function Config() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-2xl p-6 shadow-xl w-full max-w-md"
+            className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-2xl p-6 shadow-xl w-full max-w-3xl"
           >
-            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-blue-600" /> Add New Telemetry Location
+            <div className="flex items-center justify-between mb-5 border-b border-slate-100 dark:border-slate-800 pb-3.5">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                  <MapPin className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="block font-bold">Add New Telemetry Location</span>
+                  <span className="text-[10px] text-slate-400 font-medium block">Configure geolocation parameters & hierarchy links</span>
+                </div>
               </h3>
               <button
                 onClick={() => setIsAddLocModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-md"
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md hover:bg-slate-50 dark:hover:bg-slate-900 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleAddLocation} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Location Name
-                </label>
-                <Input
-                  required
-                  placeholder="e.g. Jaipur, Zone 4, NCR West"
-                  value={newLocName}
-                  onChange={(e) => setNewLocName(e.target.value)}
-                  className="h-9 text-xs"
-                />
+            <form onSubmit={handleAddLocation} className="space-y-5 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Col 1: Hierarchy Tree Selector */}
+                <div className="flex flex-col gap-2">
+                  <span className="block font-bold text-slate-600 dark:text-slate-400">
+                    Select Parent Location Hierarchy
+                  </span>
+                  <div className="border border-slate-200/80 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 p-3 max-h-56 overflow-y-auto space-y-1.5 scrollbar-thin">
+                    {[
+                      { id: "root", name: "No Parent (Root Level)", indent: 0, icon: Globe2 },
+                      { id: "india", name: "India", indent: 0, icon: Globe2 },
+                      { id: "mh", name: "Maharashtra", indent: 4, icon: MapPin },
+                      { id: "rj", name: "Rajasthan", indent: 4, icon: MapPin },
+                      { id: "mumbai", name: "Mumbai", indent: 8, icon: Building },
+                      { id: "bangalore", name: "Bangalore", indent: 8, icon: Building },
+                      { id: "up", name: "Uttar Pradesh", indent: 4, icon: MapPin },
+                      { id: "lucknow", name: "Lucknow", indent: 8, icon: Building },
+                      { id: "telangana", name: "Telangana", indent: 4, icon: MapPin },
+                      { id: "hyderabad", name: "Hyderabad", indent: 8, icon: Building },
+                      { id: "jk", name: "Jammu & Kashmir", indent: 4, icon: MapPin }
+                    ].map((loc) => {
+                      const isSelected = newLocParent === loc.name;
+                      return (
+                        <button
+                          key={loc.id}
+                          type="button"
+                          onClick={() => setNewLocParent(loc.name)}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-all cursor-pointer border ${
+                            isSelected
+                              ? "bg-blue-50/80 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900/40 font-bold"
+                              : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-850 text-slate-600 dark:text-slate-300 hover:bg-slate-100"
+                          }`}
+                          style={{ marginLeft: `${loc.indent * 4}px`, width: `calc(100% - ${loc.indent * 4}px)` }}
+                        >
+                          <div className="flex items-center gap-2">
+                            <loc.icon className={`w-3.5 h-3.5 ${isSelected ? "text-blue-600" : "text-slate-400"}`} />
+                            <span className="text-xs">{loc.name}</span>
+                          </div>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-blue-600" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="text-[10px] text-slate-400/80 mt-1">
+                    Selected Parent: <span className="font-bold text-slate-600 dark:text-slate-350">{newLocParent}</span>
+                  </div>
+                </div>
+
+                {/* Col 2: Inputs */}
+                <div className="space-y-4 col-span-1">
+                  <div>
+                    <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1.5">
+                      Location Name
+                    </label>
+                    <Input
+                      required
+                      placeholder="e.g. Jaipur, Zone 4, NCR West"
+                      value={newLocName}
+                      onChange={(e) => setNewLocName(e.target.value)}
+                      className="h-10 text-xs rounded-xl bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-600 dark:text-slate-400 mb-2">
+                      Hierarchy Type
+                    </label>
+                    <div className="grid grid-cols-3 gap-1 bg-slate-50 dark:bg-slate-900/60 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                      {(["zone", "cluster", "circle"] as const).map((type) => {
+                        const isSelected = newLocType === type;
+                        return (
+                          <button
+                            key={type}
+                            type="button; button"
+                            onClick={() => setNewLocType(type)}
+                            className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer capitalize ${
+                              isSelected
+                                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
+                            }`}
+                          >
+                            {type}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Hierarchy Type
-                </label>
-                <select
-                  value={newLocType}
-                  onChange={(e: any) => setNewLocType(e.target.value)}
-                  className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-medium outline-none"
-                >
-                  <option value="zone">Zone</option>
-                  <option value="cluster">Cluster</option>
-                  <option value="circle">Circle</option>
-                </select>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setIsAddLocModalOpen(false)}
+                  className="rounded-lg text-xs"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" size="sm" className="bg-blue-600 text-white font-semibold">
+                <Button type="submit" size="sm" className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-xs">
                   Save Location
                 </Button>
               </div>
@@ -677,70 +746,122 @@ export default function Config() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-2xl p-6 shadow-xl w-full max-w-md"
+            className="bg-white dark:bg-card border border-slate-200 dark:border-border rounded-2xl p-6 shadow-xl w-full max-w-3xl"
           >
-            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                <Layers className="w-4 h-4 text-purple-600" /> Add New Taxonomy Category
+            <div className="flex items-center justify-between mb-5 border-b border-slate-100 dark:border-slate-800 pb-3.5">
+              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                  <Layers className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="block font-bold">Add New Taxonomy Category</span>
+                  <span className="text-[10px] text-slate-400 font-medium block">Configure categorization filters & taxonomy links</span>
+                </div>
               </h3>
               <button
                 onClick={() => setIsAddCatModalOpen(false)}
-                className="p-1 text-slate-400 hover:text-slate-600 rounded-md"
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-md hover:bg-slate-50 dark:hover:bg-slate-900 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleAddCategory} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Category Name
-                </label>
-                <Input
-                  required
-                  placeholder="e.g. Rectifier, DG Power, Transmission"
-                  value={newCatName}
-                  onChange={(e) => setNewCatName(e.target.value)}
-                  className="h-9 text-xs"
-                />
+            <form onSubmit={handleAddCategory} className="space-y-5 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Col 1: Taxonomy Parent Category Selector */}
+                <div className="flex flex-col gap-2">
+                  <span className="block font-bold text-slate-600 dark:text-slate-400">
+                    Select Taxonomy Parent Category
+                  </span>
+                  <div className="border border-slate-200/80 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 p-3 max-h-56 overflow-y-auto space-y-1.5 scrollbar-thin">
+                    {[
+                      { id: "none", name: "None (Main Category)" },
+                      { id: "network", name: "Network" },
+                      { id: "fiber", name: "Fiber" },
+                      { id: "atm", name: "ATM" },
+                      { id: "eco", name: "Eco" },
+                      { id: "main", name: "Main" },
+                      { id: "category", name: "Category" }
+                    ].map((cat) => {
+                      const isSelected = newCatParent === cat.name;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setNewCatParent(cat.name)}
+                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left transition-all cursor-pointer border ${
+                            isSelected
+                              ? "bg-purple-50/80 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-900/40 font-bold"
+                              : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-850 text-slate-600 dark:text-slate-300 hover:bg-slate-100"
+                          }`}
+                        >
+                          <span className="text-xs font-semibold">{cat.name}</span>
+                          {isSelected && <Check className="w-3.5 h-3.5 text-purple-600" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="text-[10px] text-slate-400/80 mt-1">
+                    Selected Parent: <span className="font-bold text-purple-600 dark:text-purple-400">{newCatParent}</span>
+                  </div>
+                </div>
+
+                {/* Col 2: Form Inputs */}
+                <div className="space-y-4 col-span-1">
+                  <div>
+                    <label className="block font-bold text-slate-600 dark:text-slate-400 mb-1.5">
+                      Category Name
+                    </label>
+                    <Input
+                      required
+                      placeholder="e.g. Rectifier, DG Power, Transmission"
+                      value={newCatName}
+                      onChange={(e) => setNewCatName(e.target.value)}
+                      className="h-10 text-xs rounded-xl bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-600 dark:text-slate-400 mb-2">
+                      Taxonomy Category Type
+                    </label>
+                    <div className="grid grid-cols-2 gap-1 bg-slate-50 dark:bg-slate-900/60 p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                      {[
+                        { value: "main", label: "Main Category" },
+                        { value: "sub", label: "Sub Category" }
+                      ].map((t) => {
+                        const isSelected = newCatType === t.value;
+                        return (
+                          <button
+                            key={t.value}
+                            type="button"
+                            onClick={() => setNewCatType(t.value as any)}
+                            className={`py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                              isSelected
+                                ? "bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-xs"
+                                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
+                            }`}
+                          >
+                            {t.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Parent Category
-                </label>
-                <Input
-                  placeholder="e.g. Network, ATM or None"
-                  value={newCatParent}
-                  onChange={(e) => setNewCatParent(e.target.value)}
-                  className="h-9 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Category Type
-                </label>
-                <select
-                  value={newCatType}
-                  onChange={(e: any) => setNewCatType(e.target.value)}
-                  className="w-full h-9 px-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-xs font-medium outline-none"
-                >
-                  <option value="main">Main Category</option>
-                  <option value="sub">Sub Category</option>
-                </select>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setIsAddCatModalOpen(false)}
+                  className="rounded-lg text-xs"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" size="sm" className="bg-blue-600 text-white font-semibold">
+                <Button type="submit" size="sm" className="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-lg shadow-xs">
                   Save Category
                 </Button>
               </div>
