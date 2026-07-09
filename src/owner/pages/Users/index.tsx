@@ -1,11 +1,163 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { platformAdmins } from "../../data/ownerMockData";
 import { Shield, Key, UserCog, Users, CheckCircle2, XCircle } from "lucide-react";
 
 type Tab = "admins" | "customer-admins" | "roles" | "permissions";
 
+interface Admin {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  department: string;
+  mfaEnabled: boolean;
+  lastLogin: string;
+}
+
+function InviteAdminModal({
+  isOpen,
+  onClose,
+  onSave,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (admin: Admin) => void;
+}) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("Operations Admin");
+  const [department, setDepartment] = useState("Operations");
+  const [mfaEnabled, setMfaEnabled] = useState(true);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !email) return;
+
+    const newAdmin: Admin = {
+      id: `admin-${Date.now()}`,
+      name,
+      email,
+      role,
+      department,
+      mfaEnabled,
+      lastLogin: new Date().toISOString(),
+    };
+
+    onSave(newAdmin);
+    onClose();
+    setName("");
+    setEmail("");
+    setRole("Operations Admin");
+    setDepartment("Operations");
+    setMfaEnabled(true);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl w-full max-w-md overflow-hidden flex flex-col p-6 space-y-4 shadow-xl border border-slate-100"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b pb-3 border-slate-100">
+          <h2 className="text-sm font-bold text-slate-800">Invite Platform Admin</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 font-bold text-sm leading-none cursor-pointer">✕</button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-3.5 text-xs text-slate-600">
+          <div>
+            <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Full Name</label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Priya Sharma"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full h-8.5 rounded-lg border border-slate-200 px-3 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Email Address</label>
+            <input
+              type="email"
+              required
+              placeholder="priya@indionetworks.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full h-8.5 rounded-lg border border-slate-200 px-3 outline-none focus:border-indigo-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Role</label>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full h-8.5 rounded-lg border border-slate-200 px-2 outline-none focus:border-indigo-500"
+              >
+                <option value="Super Admin">Super Admin</option>
+                <option value="Operations Admin">Operations Admin</option>
+                <option value="Billing Admin">Billing Admin</option>
+                <option value="Technical Admin">Technical Admin</option>
+                <option value="Support Admin">Support Admin</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Department</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Operations"
+                value={department}
+                onChange={(e) => setDepartment(e.target.value)}
+                className="w-full h-8.5 rounded-lg border border-slate-200 px-3 outline-none focus:border-indigo-500"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 py-1 select-none">
+            <input
+              type="checkbox"
+              id="mfa"
+              checked={mfaEnabled}
+              onChange={(e) => setMfaEnabled(e.target.checked)}
+              className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+            />
+            <label htmlFor="mfa" className="text-slate-600 font-medium cursor-pointer">Require Multi-Factor Authentication (MFA)</label>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-8.5 px-4 rounded-lg text-slate-600 hover:bg-slate-50 border border-slate-200 font-semibold cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="h-8.5 px-5 rounded-lg text-white font-bold cursor-pointer transition-all active:scale-95 shadow-sm"
+              style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+            >
+              Send Invitation
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function OwnerUsers() {
   const [activeTab, setActiveTab] = useState<Tab>("admins");
+  const [adminsList, setAdminsList] = useState<Admin[]>(platformAdmins as any);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   const tabs = [
     { id: "admins" as Tab, label: "Platform Admins", icon: Shield },
@@ -23,22 +175,36 @@ export default function OwnerUsers() {
   ];
 
   const roles = [
-    { name: "Super Admin", users: 1, permissions: "All permissions", color: "#EF4444" },
-    { name: "Operations Admin", users: 2, permissions: "Customers, Vendors, Reports", color: "#F59E0B" },
-    { name: "Billing Admin", users: 1, permissions: "Billing, Invoices, Reports (read)", color: "#6366F1" },
-    { name: "Technical Admin", users: 1, permissions: "Vendors, System, Platform (read)", color: "#8B5CF6" },
-    { name: "Support Admin", users: 2, permissions: "Customers (read), Alarms, Reports (read)", color: "#3B82F6" },
+    { name: "Super Admin", users: adminsList.filter((a) => a.role === "Super Admin").length, permissions: "All permissions", color: "#EF4444" },
+    { name: "Operations Admin", users: adminsList.filter((a) => a.role === "Operations Admin").length, permissions: "Customers, Vendors, Reports", color: "#F59E0B" },
+    { name: "Billing Admin", users: adminsList.filter((a) => a.role === "Billing Admin").length, permissions: "Billing, Invoices, Reports (read)", color: "#6366F1" },
+    { name: "Technical Admin", users: adminsList.filter((a) => a.role === "Technical Admin").length, permissions: "Vendors, System, Platform (read)", color: "#8B5CF6" },
+    { name: "Support Admin", users: adminsList.filter((a) => a.role === "Support Admin").length, permissions: "Customers (read), Alarms, Reports (read)", color: "#3B82F6" },
     { name: "Read Only", users: 4, permissions: "View all, no edits", color: "#64748B" },
   ];
 
   return (
     <div className="space-y-5 pb-6">
+      <AnimatePresence>
+        {isInviteModalOpen && (
+          <InviteAdminModal
+            isOpen={isInviteModalOpen}
+            onClose={() => setIsInviteModalOpen(false)}
+            onSave={(newAdmin) => setAdminsList([...adminsList, newAdmin])}
+          />
+        )}
+      </AnimatePresence>
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900">User Management</h1>
           <p className="text-sm text-slate-500 mt-0.5">Manage platform admins, roles, and permissions</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-white cursor-pointer" style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}>
+        <button
+          onClick={() => setIsInviteModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-white cursor-pointer transition-all active:scale-95 shadow-sm"
+          style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+        >
           + Invite Admin
         </button>
       </div>
@@ -69,11 +235,11 @@ export default function OwnerUsers() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {platformAdmins.map((admin) => (
+              {adminsList.map((admin) => (
                 <tr key={admin.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold text-white" style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}>
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-[10px] font-bold text-white font-sans shrink-0" style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}>
                         {admin.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                       </div>
                       <span className="font-semibold text-slate-800">{admin.name}</span>
@@ -91,7 +257,7 @@ export default function OwnerUsers() {
                   </td>
                   <td className="px-5 py-3 text-slate-400">{new Date(admin.lastLogin).toLocaleDateString()}</td>
                   <td className="px-5 py-3">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "#ECFDF5", color: "#059669" }}>Active</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-600">Active</span>
                   </td>
                   <td className="px-5 py-3">
                     <button className="text-xs font-semibold text-indigo-600 hover:underline cursor-pointer">Edit</button>

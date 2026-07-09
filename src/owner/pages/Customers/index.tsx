@@ -1,8 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Filter, ChevronRight, Users, Building2, TrendingUp, ArrowUpRight, X, LogIn } from "lucide-react";
 import { customers, Customer } from "../../data/ownerMockData";
 import { useImpersonation } from "@/contexts/ImpersonationContext";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+// Fix leaflet marker icons
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
+
+const getMarkerIcon = (color: string, isSelected: boolean) => {
+  return L.divIcon({
+    className: "custom-leaflet-marker",
+    html: `<div style="background-color: ${color}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px ${color}; position: relative; cursor: pointer;">
+      ${isSelected ? `<div style="position: absolute; top: -5px; left: -5px; width: 20px; height: 20px; border-radius: 50%; border: 2px dashed #6366F1;" class="animate-spin"></div>` : ""}
+    </div>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+  });
+};
 
 type Tab = "all" | "health" | "subscriptions" | "plans";
 
@@ -211,12 +233,271 @@ function CustomerDetail({ c, onClose }: { c: Customer; onClose: () => void }) {
   );
 }
 
+function AddCustomerModal({
+  isOpen,
+  onClose,
+  onSave,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (c: Customer) => void;
+}) {
+  const [name, setName] = useState("");
+  const [logo, setLogo] = useState("");
+  const [plan, setPlan] = useState<Customer["plan"]>("Trial");
+  const [status, setStatus] = useState<Customer["status"]>("trial");
+  const [sites, setSites] = useState(0);
+  const [region, setRegion] = useState("North");
+  const [circle, setCircle] = useState("");
+  const [uptime, setUptime] = useState(99.0);
+  const [mrr, setMrr] = useState(0);
+  const [users, setUsers] = useState(0);
+  const [riskScore, setRiskScore] = useState(0);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !logo) return;
+    const newCustomer: Customer = {
+      id: `cust-${Date.now()}`,
+      name,
+      logo: logo.toUpperCase().slice(0, 2),
+      plan,
+      status,
+      sites: Number(sites),
+      healthySites: Number(sites),
+      offlineSites: 0,
+      users: Number(users),
+      health: status === "suspended" ? "Offline" : "Healthy",
+      uptime: Number(uptime),
+      mrr: Number(mrr),
+      arr: Number(mrr) * 12,
+      region,
+      circle,
+      riskScore: Number(riskScore),
+      joinDate: new Date().toISOString().split("T")[0],
+      renewalDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+      devices: Number(sites) * 8,
+      alarms: { critical: 0, major: 0, minor: 0 },
+      invoiceDue: 0,
+    };
+    onSave(newCustomer);
+    onClose();
+    setName("");
+    setLogo("");
+    setPlan("Trial");
+    setStatus("trial");
+    setSites(0);
+    setRegion("North");
+    setCircle("");
+    setUptime(99.0);
+    setMrr(0);
+    setUsers(0);
+    setRiskScore(0);
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl w-full max-w-lg overflow-hidden flex flex-col p-6 space-y-4 shadow-xl border border-slate-100"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b pb-3 border-slate-100">
+          <h2 className="text-sm font-bold text-slate-800">Add New Customer</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 font-bold text-sm leading-none cursor-pointer">✕</button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-3.5 text-xs text-slate-600">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Company Name</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Jio Infocomm"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full h-8.5 rounded-lg border border-slate-200 px-3 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Logo Initials (Max 2 letters)</label>
+              <input
+                type="text"
+                required
+                maxLength={2}
+                placeholder="e.g. JI"
+                value={logo}
+                onChange={(e) => setLogo(e.target.value)}
+                className="w-full h-8.5 rounded-lg border border-slate-200 px-3 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 uppercase"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Plan</label>
+              <select
+                value={plan}
+                onChange={(e) => setPlan(e.target.value as any)}
+                className="w-full h-8.5 rounded-lg border border-slate-200 px-2 outline-none focus:border-indigo-500"
+              >
+                <option value="Trial">Trial</option>
+                <option value="Basic">Basic</option>
+                <option value="Business">Business</option>
+                <option value="Professional">Professional</option>
+                <option value="Enterprise">Enterprise</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Status</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as any)}
+                className="w-full h-8.5 rounded-lg border border-slate-200 px-2 outline-none focus:border-indigo-500"
+              >
+                <option value="trial">Trial</option>
+                <option value="active">Active</option>
+                <option value="expired">Expired</option>
+                <option value="suspended">Suspended</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Sites</label>
+              <input
+                type="number"
+                min={0}
+                required
+                placeholder="e.g. 1500"
+                value={sites || ""}
+                onChange={(e) => setSites(Number(e.target.value))}
+                className="w-full h-8.5 rounded-lg border border-slate-200 px-3 outline-none focus:border-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Uptime Target (%)</label>
+              <input
+                type="number"
+                step="0.01"
+                min={0}
+                max={100}
+                required
+                placeholder="99.5"
+                value={uptime || ""}
+                onChange={(e) => setUptime(Number(e.target.value))}
+                className="w-full h-8.5 rounded-lg border border-slate-200 px-3 outline-none focus:border-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">MRR (in ₹)</label>
+              <input
+                type="number"
+                required
+                placeholder="500000"
+                value={mrr || ""}
+                onChange={(e) => setMrr(Number(e.target.value))}
+                className="w-full h-8.5 rounded-lg border border-slate-200 px-3 outline-none focus:border-indigo-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Region</label>
+              <select
+                value={region}
+                onChange={(e) => setRegion(e.target.value)}
+                className="w-full h-8.5 rounded-lg border border-slate-200 px-2 outline-none focus:border-indigo-500"
+              >
+                <option value="North">North</option>
+                <option value="West">West</option>
+                <option value="South">South</option>
+                <option value="East">East</option>
+                <option value="Central">Central</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Circle</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Maharashtra"
+                value={circle}
+                onChange={(e) => setCircle(e.target.value)}
+                className="w-full h-8.5 rounded-lg border border-slate-200 px-3 outline-none focus:border-indigo-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Users</label>
+              <input
+                type="number"
+                required
+                placeholder="e.g. 50"
+                value={users || ""}
+                onChange={(e) => setUsers(Number(e.target.value))}
+                className="w-full h-8.5 rounded-lg border border-slate-200 px-3 outline-none focus:border-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Risk Score (0-100)</label>
+              <input
+                type="number"
+                min={0}
+                max={100}
+                required
+                placeholder="e.g. 15"
+                value={riskScore || ""}
+                onChange={(e) => setRiskScore(Number(e.target.value))}
+                className="w-full h-8.5 rounded-lg border border-slate-200 px-3 outline-none focus:border-indigo-500"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-8.5 px-4 rounded-lg text-slate-600 hover:bg-slate-50 border border-slate-200 font-semibold cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="h-8.5 px-5 rounded-lg text-white font-bold cursor-pointer transition-all active:scale-95 shadow-sm"
+              style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+            >
+              Save Customer
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function OwnerCustomers() {
   const [activeTab, setActiveTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
+  const [mapMounted, setMapMounted] = useState(false);
+  const [customersList, setCustomersList] = useState<Customer[]>(customers);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  useEffect(() => {
+    setMapMounted(true);
+    return () => setMapMounted(false);
+  }, []);
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "all", label: "All Customers" },
@@ -225,7 +506,7 @@ export default function OwnerCustomers() {
     { id: "plans", label: "Customer Plans" },
   ];
 
-  const filtered = customers.filter((c) => {
+  const filtered = customersList.filter((c) => {
     const matchesSearch =
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.plan.toLowerCase().includes(search.toLowerCase()) ||
@@ -240,16 +521,23 @@ export default function OwnerCustomers() {
   });
 
   const summaryStats = [
-    { label: "Total", value: customers.length, color: "#6366F1" },
-    { label: "Active", value: customers.filter((c) => c.status === "active").length, color: "#10B981" },
-    { label: "Trial", value: customers.filter((c) => c.status === "trial").length, color: "#F59E0B" },
-    { label: "Expired", value: customers.filter((c) => c.status === "expired").length, color: "#EF4444" },
+    { label: "Total", value: customersList.length, color: "#6366F1" },
+    { label: "Active", value: customersList.filter((c) => c.status === "active").length, color: "#10B981" },
+    { label: "Trial", value: customersList.filter((c) => c.status === "trial").length, color: "#F59E0B" },
+    { label: "Expired", value: customersList.filter((c) => c.status === "expired").length, color: "#EF4444" },
   ];
 
   return (
     <div className="space-y-5 pb-6">
       <AnimatePresence>
         {selectedCustomer && <CustomerDetail c={selectedCustomer} onClose={() => setSelectedCustomer(null)} />}
+        {isAddModalOpen && (
+          <AddCustomerModal 
+            isOpen={isAddModalOpen} 
+            onClose={() => setIsAddModalOpen(false)} 
+            onSave={(newCust) => setCustomersList([...customersList, newCust])} 
+          />
+        )}
       </AnimatePresence>
 
       <div className="flex items-center justify-between">
@@ -257,7 +545,11 @@ export default function OwnerCustomers() {
           <h1 className="text-xl font-bold text-slate-900">Customers</h1>
           <p className="text-sm text-slate-500 mt-0.5">Manage all STMS platform customers</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-white cursor-pointer transition-all active:scale-95 shadow-sm" style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}>
+        <button 
+          onClick={() => setIsAddModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-white cursor-pointer transition-all active:scale-95 shadow-sm" 
+          style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+        >
           <Users className="w-3.5 h-3.5" /> + New Customer
         </button>
       </div>
@@ -288,142 +580,78 @@ export default function OwnerCustomers() {
                 </button>
               )}
             </div>
-            <div className="relative" style={{ height: 260 }}>
-              {/* Simplified India SVG Map */}
-              <svg viewBox="0 0 320 380" className="absolute inset-0 w-full h-full">
-                <path
-                  d="M120,30 L160,25 L195,40 L215,55 L235,80 L248,110 L258,145 L262,180 L255,220 L242,255 L228,280 L212,300 L195,315 L175,325 L158,315 L142,300 L128,285 L115,265 L105,240 L98,215 L100,185 L96,160 L100,130 L108,105 L112,80 L116,55 Z"
-                  fill="#F1F5F9" stroke="#CBD5E1" strokeWidth="1.5"
-                />
-                <path d="M155,315 L162,335 L158,352 L152,335 L148,318 Z" fill="#F1F5F9" stroke="#CBD5E1" strokeWidth="1.5" />
+            <div className="h-[260px] relative w-full overflow-hidden rounded-xl border border-slate-100 shadow-inner z-0">
+              {mapMounted && (
+                <MapContainer
+                  center={[22.5937, 78.9629]}
+                  zoom={3.8}
+                  className="w-full h-full z-0"
+                  zoomControl={false}
+                  attributionControl={false}
+                  scrollWheelZoom={false}
+                >
+                  <TileLayer
+                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                  />
+                  {[
+                    { name: "North", lat: 28.6139, lng: 77.2090, color: "#6366F1" },
+                    { name: "West", lat: 19.0760, lng: 72.8777, color: "#10B981" },
+                    { name: "South", lat: 12.9716, lng: 77.5946, color: "#F59E0B" },
+                    { name: "East", lat: 22.5726, lng: 88.3639, color: "#EC4899" },
+                    { name: "Central", lat: 23.2599, lng: 77.4126, color: "#8B5CF6" },
+                  ].map((r) => {
+                    const isSelected = selectedRegion === r.name;
+                    const regCustomers = customers.filter(c => c.region === r.name);
+                    const nationalCustomers = customers.filter(c => c.region === "National");
+                    const totalRegSites = regCustomers.reduce((acc, c) => acc + c.sites, 0);
+                    const avgUptime = regCustomers.length > 0 
+                      ? (regCustomers.reduce((acc, c) => acc + c.uptime, 0) / regCustomers.length).toFixed(2)
+                      : "—";
+                    
+                    const markerColor = isSelected ? "#312E81" : r.color;
 
-                {/* Regional Markers */}
-                {[
-                  { name: "North", cx: 155, cy: 95, color: "#6366F1" },
-                  { name: "West", cx: 110, cy: 180, color: "#10B981" },
-                  { name: "South", cx: 168, cy: 280, color: "#F59E0B" },
-                  { name: "East", cx: 220, cy: 145, color: "#EC4899" },
-                  { name: "Central", cx: 160, cy: 195, color: "#8B5CF6" },
-                ].map((r) => {
-                  const regCusts = customers.filter(c => c.region === r.name);
-                  const regCustCount = regCusts.length;
-                  const isSelected = selectedRegion === r.name;
-                  const isHovered = hoveredRegion === r.name;
-                  const dotRadius = regCustCount > 2 ? 10 : regCustCount > 1 ? 8 : 6;
-
-                  const dotColor = {
-                    North: "#6366F1",
-                    West: "#10B981",
-                    South: "#F59E0B",
-                    East: "#EC4899",
-                    Central: "#8B5CF6",
-                  }[r.name as "North" | "West" | "South" | "East" | "Central"] || r.color;
-
-                  return (
-                    <g 
-                      key={r.name}
-                      className="cursor-pointer group select-none"
-                      onClick={() => setSelectedRegion(isSelected ? null : r.name)}
-                      onMouseEnter={() => setHoveredRegion(r.name)}
-                      onMouseLeave={() => setHoveredRegion(null)}
-                    >
-                      {(isSelected || isHovered) && (
-                        <circle
-                          cx={r.cx} cy={r.cy}
-                          r={dotRadius + 4}
-                          fill="none"
-                          stroke={dotColor}
-                          strokeWidth="1.5"
-                          strokeOpacity={isSelected ? 0.7 : 0.4}
-                          className={isSelected ? "animate-pulse" : ""}
-                          style={{ transformOrigin: `${r.cx}px ${r.cy}px` }}
-                        />
-                      )}
-                      <circle
-                        cx={r.cx} cy={r.cy}
-                        r={dotRadius}
-                        fill={isSelected ? "#312E81" : dotColor}
-                        fillOpacity={0.85}
-                        stroke="white"
-                        strokeWidth="1.5"
-                        className="transition-all duration-300"
-                        style={{
-                          transform: isHovered || isSelected ? "scale(1.2)" : "scale(1)",
-                          transformOrigin: `${r.cx}px ${r.cy}px`
+                    return (
+                      <Marker
+                        key={r.name}
+                        position={[r.lat, r.lng]}
+                        icon={getMarkerIcon(markerColor, isSelected)}
+                        eventHandlers={{
+                          click: () => {
+                            setSelectedRegion(isSelected ? null : r.name);
+                          }
                         }}
-                      />
-                      <text 
-                        x={r.cx} 
-                        y={r.cy + dotRadius + 11} 
-                        textAnchor="middle" 
-                        fontSize="9" 
-                        fill={isSelected ? "#312E81" : "#64748B"} 
-                        fontWeight={isSelected ? "700" : "600"}
                       >
-                        {r.name}
-                      </text>
-                    </g>
-                  );
-                })}
-              </svg>
-
-              {/* Hover Tooltip */}
-              <AnimatePresence>
-                {hoveredRegion && (() => {
-                  const regCustomers = customers.filter(c => c.region === hoveredRegion);
-                  const nationalCustomers = customers.filter(c => c.region === "National");
-                  const totalRegSites = regCustomers.reduce((acc, c) => acc + c.sites, 0);
-                  const avgUptime = regCustomers.length > 0 
-                    ? (regCustomers.reduce((acc, c) => acc + c.uptime, 0) / regCustomers.length).toFixed(2)
-                    : "—";
-
-                  const coords = {
-                    North: { x: 155, y: 95 },
-                    West: { x: 110, y: 180 },
-                    South: { x: 168, y: 280 },
-                    East: { x: 220, y: 145 },
-                    Central: { x: 160, y: 195 }
-                  }[hoveredRegion as keyof typeof coords] || { x: 160, y: 195 };
-
-                  return (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95, y: 5 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute bg-slate-900/95 backdrop-blur-md text-white p-3 rounded-xl shadow-xl z-20 border border-slate-700 pointer-events-none w-48 text-[11px]"
-                      style={{
-                        left: `${(coords.x / 320) * 100}%`,
-                        top: `${(coords.y / 380) * 100}%`,
-                        transform: "translate(-50%, -115%)",
-                      }}
-                    >
-                      <div className="font-bold text-xs mb-1.5 border-b border-slate-700 pb-1 flex justify-between items-center">
-                        <span>{hoveredRegion} Region</span>
-                        <span className="text-[10px] text-slate-400">{regCustomers.length} cust</span>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-slate-300">
-                          <span>Regional:</span>
-                          <span className="font-semibold text-white max-w-[100px] truncate">{regCustomers.map(c => c.name).join(", ") || "None"}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-300">
-                          <span>National:</span>
-                          <span className="font-semibold text-slate-400 max-w-[100px] truncate">{nationalCustomers.map(c => c.name).join(", ")}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-300">
-                          <span>Total Sites:</span>
-                          <span className="font-semibold text-white">{totalRegSites.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-300">
-                          <span>Avg Uptime:</span>
-                          <span className="font-semibold text-emerald-400">{avgUptime}%</span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })()}
-              </AnimatePresence>
+                        <Popup className="custom-popup" closeButton={false}>
+                          <div className="p-1 text-[11px] font-sans">
+                            <h3 className="font-bold text-slate-800 border-b pb-1 mb-1 flex justify-between items-center">
+                              <span>{r.name} Region</span>
+                              <span className="text-[10px] text-slate-400 font-normal">{regCustomers.length} cust</span>
+                            </h3>
+                            <div className="space-y-0.5">
+                              <div className="flex justify-between gap-4 text-slate-600">
+                                <span>Regional:</span>
+                                <span className="font-semibold text-slate-900 truncate max-w-[80px]" title={regCustomers.map(c => c.name).join(", ")}>{regCustomers.map(c => c.name).join(", ") || "None"}</span>
+                              </div>
+                              <div className="flex justify-between gap-4 text-slate-600">
+                                <span>National:</span>
+                                <span className="font-semibold text-slate-950 truncate max-w-[80px]">{nationalCustomers.map(c => c.name).join(", ")}</span>
+                              </div>
+                              <div className="flex justify-between gap-4 text-slate-600">
+                                <span>Total Sites:</span>
+                                <span className="font-semibold text-slate-900">{totalRegSites.toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between gap-4 text-slate-600">
+                                <span>Avg Uptime:</span>
+                                <span className="font-semibold text-emerald-600">{avgUptime}%</span>
+                              </div>
+                            </div>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    );
+                  })}
+                </MapContainer>
+              )}
             </div>
             
             {/* Region Breakdown Progress Bars */}

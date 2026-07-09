@@ -1,16 +1,202 @@
 import { useState } from "react";
-import { invoices } from "../../data/ownerMockData";
-import { Download, Search, Filter } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { invoices, customers } from "../../data/ownerMockData";
+import { Download, Search } from "lucide-react";
+
+interface Invoice {
+  id: string;
+  number: string;
+  customer: string;
+  plan: string;
+  amount: number;
+  tax: number;
+  total: number;
+  status: "paid" | "pending" | "overdue" | "draft";
+  dueDate: string;
+}
+
+function AddInvoiceModal({
+  isOpen,
+  onClose,
+  onSave,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (inv: Invoice) => void;
+}) {
+  const [customerName, setCustomerName] = useState(customers[0]?.name || "Reliance Jio");
+  const [plan, setPlan] = useState("Enterprise");
+  const [amount, setAmount] = useState(0);
+  const [gstPercent, setGstPercent] = useState(18);
+  const [dueDate, setDueDate] = useState("");
+  const [status, setStatus] = useState<"paid" | "pending" | "overdue" | "draft">("pending");
+
+  if (!isOpen) return null;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!amount) return;
+    
+    const baseVal = Number(amount);
+    const taxVal = baseVal * (gstPercent / 100);
+    const totalVal = baseVal + taxVal;
+
+    const newInvoice: Invoice = {
+      id: `inv-${Date.now()}`,
+      number: `INV-2026-0${843 + Math.floor(Math.random() * 9000)}`,
+      customer: customerName,
+      plan,
+      amount: baseVal,
+      tax: taxVal,
+      total: totalVal,
+      status,
+      dueDate: dueDate || new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    };
+
+    onSave(newInvoice);
+    onClose();
+    setAmount(0);
+    setGstPercent(18);
+    setDueDate("");
+    setStatus("pending");
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl w-full max-w-md overflow-hidden flex flex-col p-6 space-y-4 shadow-xl border border-slate-100"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b pb-3 border-slate-100">
+          <h2 className="text-sm font-bold text-slate-800">Create New Invoice</h2>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 font-bold text-sm leading-none cursor-pointer">✕</button>
+        </div>
+        <form onSubmit={handleSubmit} className="space-y-3.5 text-xs text-slate-600">
+          <div>
+            <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Customer</label>
+            <select
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              className="w-full h-8.5 rounded-lg border border-slate-200 px-2 outline-none focus:border-indigo-500"
+            >
+              {customers.map((c) => (
+                <option key={c.id} value={c.name}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Plan</label>
+              <select
+                value={plan}
+                onChange={(e) => setPlan(e.target.value)}
+                className="w-full h-8.5 rounded-lg border border-slate-200 px-2 outline-none focus:border-indigo-500"
+              >
+                <option value="Enterprise">Enterprise</option>
+                <option value="Professional">Professional</option>
+                <option value="Business">Business</option>
+                <option value="Basic">Basic</option>
+                <option value="Trial">Trial</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Status</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as any)}
+                className="w-full h-8.5 rounded-lg border border-slate-200 px-2 outline-none focus:border-indigo-500"
+              >
+                <option value="pending">Pending</option>
+                <option value="paid">Paid</option>
+                <option value="overdue">Overdue</option>
+                <option value="draft">Draft</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Base Amount (in ₹)</label>
+              <input
+                type="number"
+                required
+                placeholder="e.g. 500000"
+                value={amount || ""}
+                onChange={(e) => setAmount(Number(e.target.value))}
+                className="w-full h-8.5 rounded-lg border border-slate-200 px-3 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">GST Rate (%)</label>
+              <select
+                value={gstPercent}
+                onChange={(e) => setGstPercent(Number(e.target.value))}
+                className="w-full h-8.5 rounded-lg border border-slate-200 px-2 outline-none focus:border-indigo-500"
+              >
+                <option value={18}>18% (Standard)</option>
+                <option value={12}>12%</option>
+                <option value={5}>5%</option>
+                <option value={0}>0% (Exempt)</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[10px] uppercase font-bold text-slate-400 mb-1">Due Date</label>
+            <input
+              type="date"
+              required
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="w-full h-8.5 rounded-lg border border-slate-200 px-3 outline-none focus:border-indigo-500"
+            />
+          </div>
+
+          {amount > 0 && (
+            <div className="bg-slate-50 p-3 rounded-lg space-y-1 text-[11px] border border-slate-100">
+              <div className="flex justify-between"><span>Base:</span><span className="font-semibold">₹{amount.toLocaleString()}</span></div>
+              <div className="flex justify-between"><span>GST ({gstPercent}%):</span><span className="font-semibold">₹{(amount * (gstPercent / 100)).toLocaleString()}</span></div>
+              <div className="flex justify-between border-t pt-1 font-bold text-slate-800"><span>Total:</span><span>₹{(amount * (1 + gstPercent / 100)).toLocaleString()}</span></div>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-8.5 px-4 rounded-lg text-slate-600 hover:bg-slate-50 border border-slate-200 font-semibold cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="h-8.5 px-5 rounded-lg text-white font-bold cursor-pointer transition-all active:scale-95 shadow-sm"
+              style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+            >
+              Create Invoice
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 export default function OwnerBilling() {
+  const [invoicesList, setInvoicesList] = useState<Invoice[]>(invoices as any);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  const totalRevenue = invoices.reduce((acc, i) => acc + (i.status === "paid" ? i.total : 0), 0);
-  const pending = invoices.filter((i) => i.status === "pending").reduce((acc, i) => acc + i.total, 0);
-  const overdue = invoices.filter((i) => i.status === "overdue").reduce((acc, i) => acc + i.total, 0);
-  const taxCollected = invoices.filter((i) => i.status === "paid").reduce((acc, i) => acc + i.tax, 0);
+  const totalRevenue = invoicesList.reduce((acc, i) => acc + (i.status === "paid" ? i.total : 0), 0);
+  const pending = invoicesList.filter((i) => i.status === "pending").reduce((acc, i) => acc + i.total, 0);
+  const overdue = invoicesList.filter((i) => i.status === "overdue").reduce((acc, i) => acc + i.total, 0);
+  const taxCollected = invoicesList.filter((i) => i.status === "paid").reduce((acc, i) => acc + i.tax, 0);
 
-  const filtered = invoices.filter((i) =>
+  const filtered = invoicesList.filter((i) =>
     i.customer.toLowerCase().includes(search.toLowerCase()) ||
     i.number.toLowerCase().includes(search.toLowerCase())
   );
@@ -24,12 +210,26 @@ export default function OwnerBilling() {
 
   return (
     <div className="space-y-5 pb-6">
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <AddInvoiceModal
+            isOpen={isAddModalOpen}
+            onClose={() => setIsAddModalOpen(false)}
+            onSave={(newInv) => setInvoicesList([newInv, ...invoicesList])}
+          />
+        )}
+      </AnimatePresence>
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900">Billing & Invoices</h1>
           <p className="text-sm text-slate-500 mt-0.5">Revenue, payments, and subscription billing</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-white cursor-pointer" style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}>
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-white cursor-pointer transition-all active:scale-95 shadow-sm"
+          style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+        >
           + Create Invoice
         </button>
       </div>
@@ -85,9 +285,6 @@ export default function OwnerBilling() {
                 className="text-xs text-slate-700 bg-transparent outline-none placeholder:text-slate-400 w-36"
               />
             </div>
-            <button className="flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-semibold text-slate-600 cursor-pointer" style={{ border: "1px solid #E2E8F0" }}>
-              <Download className="w-3.5 h-3.5" /> Export
-            </button>
           </div>
         </div>
         <table className="w-full text-xs">
@@ -100,7 +297,7 @@ export default function OwnerBilling() {
           </thead>
           <tbody className="divide-y divide-slate-50">
             {filtered.map((inv) => {
-              const sc = statusColors[inv.status];
+              const sc = statusColors[inv.status] || { bg: "#F8FAFC", color: "#94A3B8" };
               return (
                 <tr key={inv.id} className="hover:bg-slate-50 transition-colors">
                   <td className="px-5 py-3 font-mono text-[11px] text-indigo-600 font-semibold">{inv.number}</td>
@@ -116,7 +313,7 @@ export default function OwnerBilling() {
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-2">
                       <button className="text-xs font-semibold text-indigo-600 hover:underline cursor-pointer">View</button>
-                      <button className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer"><Download className="w-3 h-3" /></button>
+                      <button className="text-xs text-slate-400 hover:text-slate-600 cursor-pointer"><Download className="w-3.5 h-3.5" /></button>
                     </div>
                   </td>
                 </tr>

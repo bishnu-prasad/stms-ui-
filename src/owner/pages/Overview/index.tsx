@@ -11,6 +11,28 @@ import {
   customers, platformServices, aiInsights, activityFeed, revenueMonthly,
 } from "../../data/ownerMockData";
 import { useLocation } from "wouter";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+// Fix leaflet marker icons
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
+
+const getMarkerIcon = (color: string, isSelected: boolean) => {
+  return L.divIcon({
+    className: "custom-leaflet-marker",
+    html: `<div style="background-color: ${color}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px ${color}; position: relative; cursor: pointer;">
+      ${isSelected ? `<div style="position: absolute; top: -5px; left: -5px; width: 20px; height: 20px; border-radius: 50%; border: 2px dashed #6366F1;" class="animate-spin"></div>` : ""}
+    </div>`,
+    iconSize: [14, 14],
+    iconAnchor: [7, 7],
+  });
+};
 
 // ─── Animated Counter ─────────────────────────────────────────
 function Counter({
@@ -98,6 +120,12 @@ export default function OwnerOverview() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
   const [mapViewMode, setMapViewMode] = useState<"sites" | "customers">("sites");
+  const [mapMounted, setMapMounted] = useState(false);
+
+  useEffect(() => {
+    setMapMounted(true);
+    return () => setMapMounted(false);
+  }, []);
 
   const getRegionForIncident = (inc: typeof incidents[0]) => {
     const regionClean = inc.region.trim();
@@ -384,138 +412,67 @@ export default function OwnerOverview() {
                 </button>
               </div>
             </div>
-            <div className="relative" style={{ height: 260 }}>
-              {/* Simplified India SVG */}
-              <svg viewBox="0 0 320 380" className="absolute inset-0 w-full h-full">
-                <path
-                  d="M120,30 L160,25 L195,40 L215,55 L235,80 L248,110 L258,145 L262,180 L255,220 L242,255 L228,280 L212,300 L195,315 L175,325 L158,315 L142,300 L128,285 L115,265 L105,240 L98,215 L100,185 L96,160 L100,130 L108,105 L112,80 L116,55 Z"
-                  fill="#F1F5F9" stroke="#CBD5E1" strokeWidth="1.5"
-                />
-                <path d="M155,315 L162,335 L158,352 L152,335 L148,318 Z" fill="#F1F5F9" stroke="#CBD5E1" strokeWidth="1.5" />
+            <div className="h-[260px] relative w-full overflow-hidden rounded-xl border border-slate-100 shadow-inner z-0">
+              {mapMounted && (
+                <MapContainer
+                  center={[22.5937, 78.9629]}
+                  zoom={3.8}
+                  className="w-full h-full z-0"
+                  zoomControl={false}
+                  attributionControl={false}
+                  scrollWheelZoom={false}
+                >
+                  <TileLayer
+                    url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                  />
+                  {[
+                    { name: "North", lat: 28.6139, lng: 77.2090, sites: 2840, color: "#10B981" },
+                    { name: "West", lat: 19.0760, lng: 72.8777, sites: 2180, color: "#F59E0B" },
+                    { name: "South", lat: 12.9716, lng: 77.5946, sites: 1920, color: "#10B981" },
+                    { name: "East", lat: 22.5726, lng: 88.3639, sites: 980, color: "#10B981" },
+                    { name: "Central", lat: 23.2599, lng: 77.4126, sites: 542, color: "#10B981" },
+                  ].map((r) => {
+                    const isSelected = selectedRegion === r.name;
+                    const regionCustCount = customers.filter(c => c.region === r.name || (c.region === "National" && r.name !== "National")).length;
+                    const regIncidents = incidents.filter(inc => getRegionForIncident(inc) === r.name);
+                    
+                    const markerColor = isSelected ? "#6366F1" : r.color;
 
-                {/* Region markers */}
-                {[
-                  { name: "North", cx: 155, cy: 95, sites: 2840, status: "healthy" },
-                  { name: "West", cx: 110, cy: 180, sites: 2180, status: "warning" },
-                  { name: "South", cx: 168, cy: 280, sites: 1920, status: "healthy" },
-                  { name: "East", cx: 220, cy: 145, sites: 980, status: "healthy" },
-                  { name: "Central", cx: 160, cy: 195, sites: 542, status: "healthy" },
-                ].map((r) => {
-                  const isSelected = selectedRegion === r.name;
-                  const isHovered = hoveredRegion === r.name;
-                  const regionCustCount = customers.filter(c => c.region === r.name).length;
-                  
-                  const dotRadius = mapViewMode === "sites" 
-                    ? (r.sites > 2000 ? 9 : r.sites > 1000 ? 7 : 5)
-                    : (regionCustCount > 2 ? 9 : regionCustCount > 1 ? 7 : 5);
-
-                  return (
-                    <g 
-                      key={r.name}
-                      className="cursor-pointer group select-none"
-                      onClick={() => setSelectedRegion(selectedRegion === r.name ? null : r.name)}
-                      onMouseEnter={() => setHoveredRegion(r.name)}
-                      onMouseLeave={() => setHoveredRegion(null)}
-                    >
-                      {(isSelected || isHovered) && (
-                        <circle
-                          cx={r.cx} cy={r.cy}
-                          r={dotRadius + 4}
-                          fill="none"
-                          stroke={isSelected ? "#6366F1" : dot[r.status as keyof typeof dot]}
-                          strokeWidth="1.5"
-                          strokeOpacity={isSelected ? 0.7 : 0.4}
-                          className={isSelected ? "animate-pulse" : ""}
-                          style={{ transformOrigin: `${r.cx}px ${r.cy}px` }}
-                        />
-                      )}
-                      <circle
-                        cx={r.cx} cy={r.cy}
-                        r={dotRadius}
-                        fill={isSelected ? "#6366F1" : dot[r.status as keyof typeof dot]}
-                        fillOpacity={0.85}
-                        stroke="white"
-                        strokeWidth="1.5"
-                        className="transition-all duration-300"
-                        style={{
-                          transform: isHovered || isSelected ? "scale(1.2)" : "scale(1)",
-                          transformOrigin: `${r.cx}px ${r.cy}px`
+                    return (
+                      <Marker
+                        key={r.name}
+                        position={[r.lat, r.lng]}
+                        icon={getMarkerIcon(markerColor, isSelected)}
+                        eventHandlers={{
+                          click: () => {
+                            setSelectedRegion(isSelected ? null : r.name);
+                          }
                         }}
-                      />
-                      <text 
-                        x={r.cx} 
-                        y={r.cy + dotRadius + 11} 
-                        textAnchor="middle" 
-                        fontSize="9" 
-                        fill={isSelected ? "#4F46E5" : "#64748B"} 
-                        fontWeight={isSelected ? "700" : "600"}
                       >
-                        {r.name}
-                      </text>
-                    </g>
-                  );
-                })}
-              </svg>
-
-              {/* Hover Tooltip */}
-              <AnimatePresence>
-                {hoveredRegion && (() => {
-                  const regionData = [
-                    { name: "North", sites: 2840, status: "healthy" },
-                    { name: "West", sites: 2180, status: "warning" },
-                    { name: "South", sites: 1920, status: "healthy" },
-                    { name: "East", sites: 980, status: "healthy" },
-                    { name: "Central", sites: 542, status: "healthy" },
-                  ].find(x => x.name === hoveredRegion);
-                  
-                  if (!regionData) return null;
-                  
-                  const regCustomers = customers.filter(c => c.region === hoveredRegion || c.region === "National");
-                  const regIncidents = incidents.filter(inc => getRegionForIncident(inc) === hoveredRegion);
-                  
-                  const coords = {
-                    North: { x: 155, y: 95 },
-                    West: { x: 110, y: 180 },
-                    South: { x: 168, y: 280 },
-                    East: { x: 220, y: 145 },
-                    Central: { x: 160, y: 195 }
-                  }[hoveredRegion as keyof typeof coords] || { x: 160, y: 195 };
-
-                  return (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95, y: 5 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute bg-slate-900/95 backdrop-blur-md text-white p-3 rounded-xl shadow-xl z-20 border border-slate-700 pointer-events-none w-48 text-[11px]"
-                      style={{
-                        left: `${(coords.x / 320) * 100}%`,
-                        top: `${(coords.y / 380) * 100}%`,
-                        transform: "translate(-50%, -115%)",
-                      }}
-                    >
-                      <div className="font-bold text-xs mb-1.5 flex items-center justify-between border-b border-slate-700 pb-1">
-                        <span>{hoveredRegion} Region</span>
-                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: dot[regionData.status as keyof typeof dot] }} />
-                      </div>
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-slate-300">
-                          <span>Customers:</span>
-                          <span className="font-semibold text-white">{regCustomers.length}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-300">
-                          <span>Total Sites:</span>
-                          <span className="font-semibold text-white">{regionData.sites.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between text-slate-300">
-                          <span>Critical Incidents:</span>
-                          <span className="font-semibold text-red-400">{regIncidents.filter(i => i.severity === "critical").length}</span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })()}
-              </AnimatePresence>
+                        <Popup className="custom-popup" closeButton={false}>
+                          <div className="p-1 text-[11px] font-sans">
+                            <h3 className="font-bold text-slate-800 border-b pb-1 mb-1">{r.name} Region</h3>
+                            <div className="space-y-0.5">
+                              <div className="flex justify-between gap-4 text-slate-600">
+                                <span>Customers:</span>
+                                <span className="font-semibold text-slate-900">{regionCustCount}</span>
+                              </div>
+                              <div className="flex justify-between gap-4 text-slate-600">
+                                <span>Total Sites:</span>
+                                <span className="font-semibold text-slate-900">{r.sites.toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between gap-4 text-slate-600">
+                                <span>Critical Incidents:</span>
+                                <span className="font-semibold text-red-500">{regIncidents.filter(i => i.severity === "critical").length}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    );
+                  })}
+                </MapContainer>
+              )}
             </div>
 
             {/* Legend */}
