@@ -135,63 +135,44 @@ const navSections: NavSection[] = [
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [location, setLocation] = useLocation();
-  const [activeHash, setActiveHash] = useState("#analytics");
+  const [activeHash, setActiveHash] = useState("");
   const { theme, setTheme } = useTheme();
 
-  // Helper to determine initial active group based on URL path
-  const getInitialActiveGroup = () => {
-    if (location.startsWith("/analytics")) return "Dashboard";
-    if (location.startsWith("/monitor")) return "Monitor";
-    if (location.startsWith("/config")) return "Config";
-    if (location.startsWith("/sites")) return "Sites";
-    if (location.startsWith("/users")) return "Users";
-    if (location.startsWith("/reports")) return "Reports";
-    if (location.startsWith("/notifications")) return "Notifications";
-    return "Dashboard";
+  /**
+   * Derive the parent group name whose child currently matches the location.
+   * Uses the nav data directly so no hardcoded strings are needed.
+   */
+  const getActiveGroup = (): string | null => {
+    for (const section of navSections) {
+      for (const item of section.items) {
+        if (!item.children) continue;
+        const matched = item.children.some((c) => {
+          if (!c.href.startsWith("/")) return false;
+          const [path] = c.href.split("?");
+          return location === path || location.startsWith(path + "/");
+        });
+        if (matched) return item.name;
+      }
+    }
+    return null;
   };
 
-  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(() => {
-    const activeGroup = getInitialActiveGroup();
-    return {
-      Dashboard: activeGroup === "Dashboard",
-      Monitor: activeGroup === "Monitor",
-      Config: activeGroup === "Config",
-      Sites: activeGroup === "Sites",
-      Users: activeGroup === "Users",
-      Reports: activeGroup === "Reports",
-      Notifications: activeGroup === "Notifications",
-    };
-  });
+  // Single string — only one parent group can be open at a time
+  const [expandedItem, setExpandedItem] = useState<string | null>(() => getActiveGroup());
 
-  // Automatically update the open menu group when route changes
+  // Auto-sync expanded group whenever the route changes
   useEffect(() => {
-    const activeGroup = getInitialActiveGroup();
-    setExpandedItems({
-      Dashboard: activeGroup === "Dashboard",
-      Monitor: activeGroup === "Monitor",
-      Config: activeGroup === "Config",
-      Sites: activeGroup === "Sites",
-      Users: activeGroup === "Users",
-      Reports: activeGroup === "Reports",
-      Notifications: activeGroup === "Notifications",
-    });
+    const group = getActiveGroup();
+    if (group) {
+      // A child route is active — open its parent
+      setExpandedItem(group);
+    }
+    // If no group matches (standalone leaf item), keep current state so clicking
+    // a standalone item doesn't accidentally re-open a group.
   }, [location]);
 
   function toggleExpanded(name: string) {
-    setExpandedItems((prev) => {
-      const next = {
-        Dashboard: false,
-        Monitor: false,
-        Config: false,
-        Sites: false,
-        Users: false,
-        Reports: false,
-        Notifications: false,
-      };
-      // Toggle the clicked one, collapse others
-      next[name] = !prev[name];
-      return next;
-    });
+    setExpandedItem((prev) => (prev === name ? null : name));
   }
 
   function handleNavigate(href?: string) {
@@ -199,6 +180,8 @@ export function Sidebar() {
     if (href.startsWith("/")) {
       setLocation(href);
     } else {
+      // Standalone hash-based item (e.g. Inventory, API) — collapse all groups
+      setExpandedItem(null);
       setActiveHash(href);
       const id = href.replace("#", "");
       const el = document.getElementById(id);
@@ -330,7 +313,7 @@ export function Sidebar() {
                                 </span>
                                 <ChevronDown
                                   className={`w-3.5 h-3.5 shrink-0 text-slate-400 transition-transform duration-200 ${
-                                    expandedItems[item.name] ? "rotate-180" : ""
+                                    expandedItem === item.name ? "rotate-180" : ""
                                   }`}
                                 />
                               </div>
@@ -345,7 +328,7 @@ export function Sidebar() {
 
                     {/* Sub-items list */}
                     <AnimatePresence initial={false}>
-                      {expandedItems[item.name] && !collapsed && (
+                      {expandedItem === item.name && !collapsed && (
                         <motion.div
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: "auto" }}

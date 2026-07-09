@@ -4,8 +4,9 @@ import {
   LayoutDashboard, MapPin, Bell, Settings, FileText,
   Briefcase, Wrench, ShieldCheck, ChevronDown, ChevronRight,
   ClipboardList, Package, HardHat, LifeBuoy, LogOut, Navigation,
-  History
+  History, Sun, Moon
 } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface NavChild {
   label: string;
@@ -94,6 +95,7 @@ const navGroups: NavGroup[] = [
 
 export function EngineerSidebar() {
   const [location, setLocation] = useLocation();
+  const { theme, setTheme } = useTheme();
 
   const getActiveGroup = () => {
     for (const g of navGroups) {
@@ -212,6 +214,25 @@ export function EngineerSidebar() {
           );
         })}
       </nav>
+
+      {/* Theme Toggle */}
+      <div className="px-3 shrink-0 my-1">
+        <button
+          type="button"
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="w-full flex items-center gap-3 h-10 px-3 rounded-lg transition-colors cursor-pointer text-left border-none bg-transparent hover:bg-slate-800/50"
+          style={{ color: "#CBD5E1" }}
+        >
+          {theme === "dark" ? (
+            <Sun className="w-4 h-4 shrink-0 text-amber-500" />
+          ) : (
+            <Moon className="w-4 h-4 shrink-0 text-slate-400" />
+          )}
+          <span className="text-[13px] font-medium text-slate-300">
+            {theme === "dark" ? "Light Mode" : "Dark Mode"}
+          </span>
+        </button>
+      </div>
 
       {/* Footer */}
       <div className="p-4 border-t border-slate-800 space-y-2 bg-[#0F172A]/50">

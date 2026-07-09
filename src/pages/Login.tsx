@@ -92,6 +92,7 @@ export default function Login() {
             src="/login-bg.png"
             alt="Telecom Tower Background"
             className="w-full h-full object-cover opacity-55"
+            style={{ objectPosition: "70% center" }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#090D16]/80 via-[#090D16]/20 to-[#090D16]/50" />
         </div>

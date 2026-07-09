@@ -4,8 +4,9 @@ import {
   LayoutDashboard, Users, MapPin, Bell, Radio, Settings, FileText,
   BarChart2, Shield, ClipboardList, ChevronDown, ChevronRight,
   ShieldCheck, Building2, Activity, Wrench, Server, Cpu,
-  BookOpen, LogOut
+  BookOpen, LogOut, Sun, Moon
 } from "lucide-react";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface NavChild {
   label: string;
@@ -138,6 +139,7 @@ const navGroups: NavGroup[] = [
 
 export function SuperAdminSidebar() {
   const [location, setLocation] = useLocation();
+  const { theme, setTheme } = useTheme();
 
   // Determine which group is active
   const getActiveGroup = () => {
@@ -253,6 +255,25 @@ export function SuperAdminSidebar() {
           );
         })}
       </nav>
+
+      {/* Theme Toggle */}
+      <div className="px-2 shrink-0 my-1">
+        <button
+          type="button"
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="w-full flex items-center gap-2.5 h-9 px-3 rounded-lg transition-colors cursor-pointer text-left border-none bg-transparent hover:bg-slate-50"
+          style={{ color: "#475569" }}
+        >
+          {theme === "dark" ? (
+            <Sun className="w-4 h-4 shrink-0 text-amber-500" />
+          ) : (
+            <Moon className="w-4 h-4 shrink-0 text-slate-450" />
+          )}
+          <span className="text-[12.5px] font-medium text-slate-650 dark:text-slate-300">
+            {theme === "dark" ? "Light Mode" : "Dark Mode"}
+          </span>
+        </button>
+      </div>
 
       {/* Footer */}
       <div className="p-3 border-t border-slate-100 space-y-1">

@@ -275,6 +275,117 @@ export default function UsersPage() {
   const [newRoleTitle, setNewRoleTitle] = useState("");
   const [newRoleDesc, setNewRoleDesc] = useState("");
 
+  // EDIT MODAL STATES
+  const [selectedUser, setSelectedUser] = useState<UserAccount | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editTimezone, setEditTimezone] = useState("");
+  const [editLanguage, setEditLanguage] = useState("");
+  const [editDateFormat, setEditDateFormat] = useState("");
+  const [editLocations, setEditLocations] = useState<string[]>([]);
+  const [editStatus, setEditStatus] = useState<"Active" | "Inactive">("Active");
+  const [editAccess, setEditAccess] = useState(true);
+  const [editView, setEditView] = useState<"LTR" | "RTL">("LTR");
+  const [edit2FA, setEdit2FA] = useState(false);
+  const [activeDetailTab, setActiveDetailTab] = useState<"details" | "access" | "activity">("details");
+
+  // Mock list of locations for dropdown select
+  const availableLocations = [
+    "Mumbai NOC", "Delhi Tower Alpha", "Chennai Datacenter", 
+    "Kolkata Hub", "Bangalore R&D", "Pune Edge Site", "Hyderabad Exchange"
+  ];
+
+  // Permissions state for Edit Access tab
+  const [editPermissions, setEditPermissions] = useState<Record<string, boolean>>({
+    "View My Sites": true,
+    "Get Site Details": true,
+    "Update Site Configuration": false,
+    "Export Reports": false,
+    "Trigger Alarms Triage": false,
+    "Manage Vendor Dispatch": false,
+  });
+
+  const handleOpenEditModal = (user: UserAccount) => {
+    setSelectedUser(user);
+    const names = user.name.split(" ");
+    setEditFirstName(names[0] || "");
+    setEditLastName(names.slice(1).join(" ") || "");
+    setEditEmail(user.email);
+    setEditTimezone("(GMT+05:30) Chennai, Kolkata, Mumbai, New Delhi");
+    setEditLanguage(user.language || "English");
+    setEditDateFormat("YYYY-MM-DD");
+    setEditLocations(["Mumbai NOC", "Delhi Tower Alpha"]);
+    setEditStatus(user.status);
+    setEditAccess(user.access);
+    setEditView(user.view);
+    setEdit2FA(user.id === "v-1" || user.id === "a-1"); // Default true for ankush users
+    
+    // Reset permissions based on type
+    if (user.roleType === "Admin") {
+      setEditPermissions({
+        "View My Sites": true,
+        "Get Site Details": true,
+        "Update Site Configuration": true,
+        "Export Reports": true,
+        "Trigger Alarms Triage": true,
+        "Manage Vendor Dispatch": true,
+      });
+    } else {
+      setEditPermissions({
+        "View My Sites": true,
+        "Get Site Details": true,
+        "Update Site Configuration": false,
+        "Export Reports": false,
+        "Trigger Alarms Triage": false,
+        "Manage Vendor Dispatch": false,
+      });
+    }
+
+    setActiveDetailTab("details");
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateDetails = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+
+    const updatedName = `${editFirstName.trim()} ${editLastName.trim()}`.trim() || selectedUser.name;
+    const initials = updatedName
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2);
+
+    const updatedUser: UserAccount = {
+      ...selectedUser,
+      name: updatedName,
+      email: editEmail,
+      status: editStatus,
+      access: editAccess,
+      view: editView,
+      language: editLanguage,
+      initials,
+    };
+
+    if (selectedUser.roleType === "Vendor") {
+      setVendors(vendors.map((v) => (v.id === selectedUser.id ? updatedUser : v)));
+    } else {
+      setAdmins(admins.map((a) => (a.id === selectedUser.id ? updatedUser : a)));
+    }
+
+    setIsEditModalOpen(false);
+  };
+
+  const handleTogglePermission = (permission: string) => {
+    setEditPermissions(prev => ({
+      ...prev,
+      [permission]: !prev[permission]
+    }));
+  };
+
   useEffect(() => {
     const handleUrlChange = () => {
       const searchParams = new URLSearchParams(window.location.search);
@@ -674,8 +785,9 @@ export default function UsersPage() {
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => handleOpenEditModal(vendor)}
                             className="h-7 w-7 p-0 bg-slate-800 hover:bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 border-none shadow-2xs"
-                            title="Log in / Impersonate"
+                            title="View & Edit Details"
                           >
                             <LogIn className="w-3.5 h-3.5" />
                           </Button>
@@ -867,8 +979,9 @@ export default function UsersPage() {
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => handleOpenEditModal(admin)}
                             className="h-7 w-7 p-0 bg-slate-800 hover:bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 border-none shadow-2xs"
-                            title="Log in / Impersonate"
+                            title="View & Edit Details"
                           >
                             <LogIn className="w-3.5 h-3.5" />
                           </Button>
@@ -1551,6 +1664,473 @@ export default function UsersPage() {
                 </Button>
               </div>
             </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* MODAL DIALOG: VIEW / EDIT USER DETAILS (PREMIUM & UNIQUE)            */}
+      {/* ==================================================================== */}
+      {isEditModalOpen && selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-905/60 backdrop-blur-md p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            transition={{ type: "spring", duration: 0.4 }}
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col md:flex-row h-[85vh] max-h-[720px] text-left"
+          >
+            {/* Left Sidebar Info Card */}
+            <div className="md:w-80 bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col items-center text-center justify-between shrink-0">
+              <div className="w-full space-y-5">
+                {/* Top Title/Badge */}
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-[10px] uppercase font-extrabold tracking-wider px-2.5 py-0.5 rounded-full bg-slate-250 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                    User Profile
+                  </span>
+                  <Badge className={`${selectedUser.roleType === 'Admin' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-blue-600 hover:bg-blue-700'} text-white text-[9px] uppercase font-bold tracking-wider`}>
+                    {selectedUser.roleType}
+                  </Badge>
+                </div>
+
+                {/* Avatar and Info */}
+                <div className="flex flex-col items-center">
+                  <div className={`w-20 h-20 rounded-2xl bg-gradient-to-tr ${selectedUser.roleType === 'Admin' ? 'from-indigo-500 to-purple-600' : 'from-blue-500 to-cyan-500'} text-white flex items-center justify-center font-extrabold text-2xl shadow-lg relative`}>
+                    {selectedUser.initials}
+                    <div className={`absolute -bottom-1 -right-1 w-4.5 h-4.5 rounded-full border-2 border-white dark:border-slate-900 ${editStatus === 'Active' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                  </div>
+                  <h4 className="mt-4 font-bold text-slate-800 dark:text-slate-100 text-base capitalize tracking-tight leading-snug">
+                    {editFirstName} {editLastName}
+                  </h4>
+                  <span className="text-[11px] text-slate-400 font-mono mt-1 select-all break-all w-full">
+                    {editEmail}
+                  </span>
+                </div>
+
+                {/* Quick Metrics */}
+                <div className="grid grid-cols-3 gap-2 bg-white dark:bg-slate-900/50 p-3 rounded-2xl border border-slate-200/60 dark:border-slate-805/80 shadow-2xs">
+                  <div className="text-center p-1">
+                    <span className="block text-xs font-extrabold text-slate-800 dark:text-slate-100 font-mono">
+                      {selectedUser.roleType === 'Admin' ? '8' : '3'}
+                    </span>
+                    <span className="text-[9px] text-slate-400 uppercase font-semibold">Sites</span>
+                  </div>
+                  <div className="text-center p-1 border-x border-slate-100 dark:border-slate-800">
+                    <span className="block text-xs font-extrabold text-slate-800 dark:text-slate-100 font-mono">
+                      {selectedUser.roleType === 'Admin' ? '2' : '0'}
+                    </span>
+                    <span className="text-[9px] text-slate-400 uppercase font-semibold">Alarms</span>
+                  </div>
+                  <div className="text-center p-1">
+                    <span className="block text-xs font-extrabold text-emerald-500 font-mono">
+                      98%
+                    </span>
+                    <span className="text-[9px] text-slate-400 uppercase font-semibold">Uptime</span>
+                  </div>
+                </div>
+
+                {/* Settings Overview Badge List */}
+                <div className="space-y-2 text-left w-full pt-2">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-slate-400 font-medium">Locale Language</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-300">{editLanguage}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-slate-400 font-medium">Layout Direction</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-300 uppercase">{editView}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-slate-400 font-medium">2FA Security</span>
+                    <span className={`font-bold ${edit2FA ? 'text-emerald-500' : 'text-slate-450'}`}>
+                      {edit2FA ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer info */}
+              <div className="text-[9px] text-slate-400 font-mono pt-4 w-full border-t border-slate-200/50 dark:border-slate-800/50">
+                ID: {selectedUser.id} • STMS Premium IAM
+              </div>
+            </div>
+
+            {/* Right Content Section */}
+            <div className="flex-1 flex flex-col overflow-hidden bg-white dark:bg-slate-900">
+              {/* Header Tabs */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 shrink-0">
+                <div className="flex gap-2">
+                  {(["details", "access", "activity"] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setActiveDetailTab(tab)}
+                      className={`px-4 py-1.5 rounded-full text-[11px] font-bold transition-all uppercase tracking-wider ${
+                        activeDetailTab === tab
+                          ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs"
+                          : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Form Body - Scrollable */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <AnimatePresence mode="wait">
+                  {activeDetailTab === "details" && (
+                    <motion.form
+                      key="details-tab"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      onSubmit={handleUpdateDetails}
+                      className="space-y-5 text-xs"
+                    >
+                      <h5 className="font-extrabold text-slate-850 dark:text-slate-100 text-xs tracking-tight border-b border-slate-100 dark:border-slate-850 pb-1.5 uppercase">
+                        Personal Details & Localization
+                      </h5>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                            First Name
+                          </label>
+                          <Input
+                            required
+                            value={editFirstName}
+                            onChange={(e) => setEditFirstName(e.target.value)}
+                            placeholder="Enter first name"
+                            className="h-9 text-xs rounded-xl border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                            Last Name
+                          </label>
+                          <Input
+                            required
+                            value={editLastName}
+                            onChange={(e) => setEditLastName(e.target.value)}
+                            placeholder="Enter last name"
+                            className="h-9 text-xs rounded-xl border-slate-200 dark:border-slate-800 focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                            Timezone
+                          </label>
+                          <select
+                            value={editTimezone}
+                            onChange={(e) => setEditTimezone(e.target.value)}
+                            className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent dark:bg-slate-900 px-3 text-xs focus:ring-2 focus:ring-blue-500 text-slate-700 dark:text-slate-300"
+                          >
+                            <option value="(GMT+05:30) Chennai, Kolkata, Mumbai, New Delhi">
+                              (GMT+05:30) Chennai, Kolkata, Mumbai
+                            </option>
+                            <option value="(GMT-05:00) Eastern Time (US & Canada)">
+                              (GMT-05:00) Eastern Time (US & Canada)
+                            </option>
+                            <option value="(GMT+00:00) London, Dublin, Edinburgh">
+                              (GMT+00:00) London, Dublin, Edinburgh
+                            </option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                            Language
+                          </label>
+                          <select
+                            value={editLanguage}
+                            onChange={(e) => setEditLanguage(e.target.value)}
+                            className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent dark:bg-slate-900 px-3 text-xs focus:ring-2 focus:ring-blue-500 text-slate-700 dark:text-slate-300"
+                          >
+                            <option value="English">English (US)</option>
+                            <option value="Spanish">Español</option>
+                            <option value="Hindi">हिन्दी</option>
+                            <option value="French">Français</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                            Date Format
+                          </label>
+                          <select
+                            value={editDateFormat}
+                            onChange={(e) => setEditDateFormat(e.target.value)}
+                            className="w-full h-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent dark:bg-slate-900 px-3 text-xs focus:ring-2 focus:ring-blue-500 text-slate-700 dark:text-slate-300"
+                          >
+                            <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                            <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                            <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+                            Assigned Locations
+                          </label>
+                          <div className="flex flex-wrap gap-1.5 p-2 rounded-xl border border-slate-200 dark:border-slate-800 min-h-[36px] bg-slate-50/50 dark:bg-slate-950/20">
+                            {editLocations.map((loc) => (
+                              <span key={loc} className="inline-flex items-center gap-1 bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 px-2 py-0.5 rounded-md font-bold text-[10px]">
+                                {loc}
+                                <button
+                                  type="button"
+                                  onClick={() => setEditLocations(editLocations.filter((l) => l !== loc))}
+                                  className="text-blue-500 hover:text-blue-700 font-bold ml-1"
+                                >
+                                  ×
+                                </button>
+                              </span>
+                            ))}
+                            {editLocations.length === 0 && (
+                              <span className="text-slate-400 italic p-0.5">No locations assigned</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <h5 className="font-extrabold text-slate-850 dark:text-slate-100 text-xs tracking-tight border-b border-slate-100 dark:border-slate-855 pt-3 pb-1.5 uppercase">
+                        Account Policies & Controls
+                      </h5>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="flex items-center justify-between p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-955/10">
+                          <div>
+                            <span className="block font-bold text-slate-800 dark:text-slate-100">Status Type</span>
+                            <span className="text-[10px] text-slate-400">Account login status</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setEditStatus(editStatus === "Active" ? "Inactive" : "Active")}
+                            className={`px-3 py-1 rounded-lg font-bold uppercase transition-all ${
+                              editStatus === "Active"
+                                ? "bg-emerald-500 text-white"
+                                : "bg-rose-500 text-white"
+                            }`}
+                          >
+                            {editStatus}
+                          </button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-955/10">
+                          <div>
+                            <span className="block font-bold text-slate-800 dark:text-slate-100">Access Granted</span>
+                            <span className="text-[10px] text-slate-400">NOC dashboard permissions</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setEditAccess(!editAccess)}
+                            className={`px-3 py-1 rounded-lg font-bold uppercase transition-all ${
+                              editAccess
+                                ? "bg-emerald-500 text-white"
+                                : "bg-slate-350 dark:bg-slate-700 text-slate-700 dark:text-slate-300"
+                            }`}
+                          >
+                            {editAccess ? "Yes" : "No"}
+                          </button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-955/10">
+                          <div>
+                            <span className="block font-bold text-slate-800 dark:text-slate-100">View Layout</span>
+                            <span className="text-[10px] text-slate-400 font-mono">LTR / RTL design mode</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setEditView(editView === "LTR" ? "RTL" : "LTR")}
+                            className="px-3 py-1 rounded-lg font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-250 dark:border-slate-700"
+                          >
+                            {editView}
+                          </button>
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-955/10">
+                          <div>
+                            <span className="block font-bold text-slate-800 dark:text-slate-100">Enable 2FA</span>
+                            <span className="text-[10px] text-slate-400">Multi-factor security</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setEdit2FA(!edit2FA)}
+                            className={`px-3 py-1 rounded-lg font-bold uppercase transition-all ${
+                              edit2FA
+                                ? "bg-blue-600 text-white"
+                                : "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
+                            }`}
+                          >
+                            {edit2FA ? "On" : "Off"}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800 shrink-0">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsEditModalOpen(false)}
+                          className="rounded-xl h-9"
+                        >
+                          Close
+                        </Button>
+                        <Button
+                          type="submit"
+                          className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl h-9 px-5"
+                        >
+                          Update Details
+                        </Button>
+                      </div>
+                    </motion.form>
+                  )}
+
+                  {activeDetailTab === "access" && (
+                    <motion.div
+                      key="access-tab"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="space-y-5"
+                    >
+                      <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <div>
+                          <h5 className="font-extrabold text-slate-850 dark:text-slate-100 text-xs uppercase tracking-tight">
+                            Security Permissions Matrix
+                          </h5>
+                          <p className="text-[10px] text-slate-400">Grant or restrict detailed functionality</p>
+                        </div>
+                        <Badge variant="outline" className="border-emerald-350 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 font-bold">
+                          IAM Live
+                        </Badge>
+                      </div>
+
+                      <div className="space-y-3">
+                        {Object.entries(editPermissions).map(([perm, val]) => (
+                          <div
+                            key={perm}
+                            onClick={() => handleTogglePermission(perm)}
+                            className="flex items-center justify-between p-3 rounded-2xl border border-slate-150 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors cursor-pointer select-none"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all ${
+                                val 
+                                  ? "bg-blue-600 border-blue-600 text-white" 
+                                  : "border-slate-300 dark:border-slate-700 bg-white dark:bg-transparent"
+                              }`}>
+                                {val && <Check className="w-3 h-3 stroke-[3]" />}
+                              </div>
+                              <div>
+                                <span className="block text-xs font-bold text-slate-800 dark:text-slate-100">
+                                  {perm}
+                                </span>
+                                <span className="text-[10px] text-slate-400">
+                                  Allows access to perform action with this scope
+                                </span>
+                              </div>
+                            </div>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                              val 
+                                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300"
+                                : "bg-slate-105 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
+                            }`}>
+                              {val ? "Allowed" : "Inherited Off"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsEditModalOpen(false)}
+                          className="rounded-xl h-9"
+                        >
+                          Close
+                        </Button>
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            setIsEditModalOpen(false);
+                          }}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl h-9 px-5"
+                        >
+                          Update Access
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {activeDetailTab === "activity" && (
+                    <motion.div
+                      key="activity-tab"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="space-y-5"
+                    >
+                      <div className="border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <h5 className="font-extrabold text-slate-850 dark:text-slate-100 text-xs uppercase tracking-tight">
+                          Audit Activity Logs
+                        </h5>
+                        <p className="text-[10px] text-slate-400">Real-time session trail</p>
+                      </div>
+
+                      <div className="space-y-4 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100 dark:before:bg-slate-800">
+                        {[
+                          { title: "Logged in via Browser Client", desc: "Session started from Mumbai NOC (IP 103.45.1.20) Chrome on macOS", time: "2 hours ago" },
+                          { title: "Updated Site Allocation", desc: "Assigned to locations: Delhi Tower Alpha, Chennai Datacenter", time: "1 day ago" },
+                          { title: "Security Credentials Refreshed", desc: "Reset 2-factor authentication status and API access token", time: "3 days ago" },
+                          { title: "Account Initial Setup", desc: "User created by platform administrator root@atc.com", time: "5 days ago" },
+                        ].map((act, index) => (
+                          <div key={index} className="relative pl-7 group text-left">
+                            <div className="absolute left-1.5 top-1.5 w-3 h-3 rounded-full bg-blue-500 border-2 border-white dark:border-slate-900" />
+                            <div className="flex flex-col gap-0.5 text-xs">
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-slate-800 dark:text-slate-100">
+                                  {act.title}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-medium">
+                                  {act.time}
+                                </span>
+                              </div>
+                              <span className="text-[11px] text-slate-450">
+                                {act.desc}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setIsEditModalOpen(false)}
+                          className="rounded-xl h-9"
+                        >
+                          Close
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
           </motion.div>
         </div>
       )}

@@ -4,9 +4,10 @@ import { useLocation } from "wouter";
 import {
   LayoutDashboard, HeartPulse, Users, Store, Globe, Package,
   BarChart3, Wallet, FileText, Shield, Settings, LogOut,
-  ChevronRight, ChevronLeft, Server,
+  ChevronRight, ChevronLeft, Server, Sun, Moon,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface NavItem {
   label: string;
@@ -31,6 +32,7 @@ const navItems: NavItem[] = [
 export function OwnerSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [location, setLocation] = useLocation();
+  const { theme, setTheme } = useTheme();
 
   function isActive(href: string) {
     return location === href || location.startsWith(href + "?");
@@ -156,6 +158,52 @@ export function OwnerSidebar() {
           );
         })}
       </nav>
+
+      {/* Theme Toggle */}
+      <div className="px-2 shrink-0 my-1">
+        <TooltipProvider delayDuration={80}>
+          <Tooltip open={collapsed ? undefined : false}>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="w-full flex items-center h-9 px-2.5 rounded-lg transition-all duration-100 cursor-pointer text-left border-none bg-transparent"
+                style={{ color: "#64748B" }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
+                  (e.currentTarget as HTMLElement).style.color = "#94A3B8";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.background = "transparent";
+                  (e.currentTarget as HTMLElement).style.color = "#64748B";
+                }}
+              >
+                {theme === "dark" ? (
+                  <Sun className="w-4 h-4 shrink-0 text-amber-500" />
+                ) : (
+                  <Moon className="w-4 h-4 shrink-0 text-slate-400" />
+                )}
+                <AnimatePresence initial={false}>
+                  {!collapsed && (
+                    <motion.span
+                      initial={{ opacity: 0, width: 0 }}
+                      animate={{ opacity: 1, width: "auto" }}
+                      exit={{ opacity: 0, width: 0 }}
+                      transition={{ duration: 0.15 }}
+                      className="ml-2.5 text-[13px] font-medium whitespace-nowrap overflow-hidden"
+                    >
+                      {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs">
+              {theme === "dark" ? "Light Mode" : "Dark Mode"}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
 
       {/* Footer — user */}
       <div
