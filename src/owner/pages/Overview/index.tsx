@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   RefreshCw, ExternalLink, FileText, CheckCircle2, AlertTriangle,
-  XCircle, Server, ArrowUpRight, ChevronRight, Activity,
+  XCircle, Server, ArrowUpRight, ChevronRight, Activity, X,
 } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -38,12 +38,13 @@ function Counter({
 }
 
 // ─── Fade-Up Wrapper ──────────────────────────────────────────
-function FadeUp({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+function FadeUp({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay, ease: [0.16, 1, 0.3, 1] }}
+      className={className}
     >
       {children}
     </motion.div>
@@ -94,8 +95,42 @@ export default function OwnerOverview() {
   const [lastUpdated] = useState(new Date());
   const [refreshing, setRefreshing] = useState(false);
 
-  const criticalCount = incidents.filter((i) => i.severity === "critical").length;
-  const topCustomers = customers.slice(0, 5);
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
+  const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
+  const [mapViewMode, setMapViewMode] = useState<"sites" | "customers">("sites");
+
+  const getRegionForIncident = (inc: typeof incidents[0]) => {
+    const regionClean = inc.region.trim();
+    if (["North", "UP", "Delhi", "Punjab"].includes(regionClean)) return "North";
+    if (["West", "Gujarat", "Mumbai", "Maharashtra"].includes(regionClean)) return "West";
+    if (["East", "West Bengal", "Kolkata"].includes(regionClean)) return "East";
+    if (["South", "Tamil Nadu", "Karnataka"].includes(regionClean)) return "South";
+    if (["Central", "Madhya Pradesh"].includes(regionClean)) return "Central";
+    const cust = customers.find(c => c.name === inc.customer);
+    if (cust && cust.region !== "National") return cust.region;
+    return "North";
+  };
+
+  const filteredIncidents = incidents.filter(
+    (inc) => !selectedRegion || getRegionForIncident(inc) === selectedRegion
+  );
+
+  const filteredTopCustomers = customers
+    .filter((c) => !selectedRegion || c.region === selectedRegion || c.region === "National");
+
+  // Keep topCustomers to slice from the filtered ones
+  const displayedTopCustomers = filteredTopCustomers.slice(0, 5);
+
+  const totalSites = selectedRegion 
+    ? customers.filter(c => c.region === selectedRegion || (c.region === "National" && selectedRegion !== "National")).reduce((acc, c) => acc + c.sites, 0)
+    : 8462;
+
+  const currentCustomersCount = selectedRegion
+    ? customers.filter(c => c.region === selectedRegion || c.region === "National").length
+    : 124;
+
+  const criticalCount = filteredIncidents.filter((i) => i.severity === "critical").length;
+  const topCustomers = displayedTopCustomers;
   const revenueData = revenueMonthly.map((m) => ({ month: m.month, value: m.revenue / 100000 }));
 
   const healthyServices = platformServices.filter((s) => s.status === "healthy").length;
@@ -145,9 +180,9 @@ export default function OwnerOverview() {
                 <span className="text-sm text-slate-400 font-medium">Platform Availability</span>
               </div>
               <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-sm text-slate-500 font-medium">
-                <span><span className="font-bold text-slate-800">124</span> Active Customers</span>
+                <span><span className="font-bold text-slate-800">{currentCustomersCount}</span> Active Customers</span>
                 <span className="text-slate-200">·</span>
-                <span><span className="font-bold text-slate-800">8,462</span> Sites</span>
+                <span><span className="font-bold text-slate-800">{totalSites.toLocaleString()}</span> Sites</span>
                 <span className="text-slate-200">·</span>
                 <span><span className="font-bold text-slate-800">18</span> Vendors</span>
                 <span className="text-slate-200">·</span>
@@ -201,6 +236,23 @@ export default function OwnerOverview() {
           </div>
         </div>
       </FadeUp>
+
+      {selectedRegion && (
+        <FadeUp delay={0}>
+          <div className="flex items-center justify-between bg-indigo-50/70 border border-indigo-100/80 backdrop-blur px-5 py-3 rounded-xl">
+            <div className="flex items-center gap-2 text-xs font-semibold text-indigo-800">
+              <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
+              <span>Dashboard filtered by region: <strong>{selectedRegion}</strong></span>
+            </div>
+            <button 
+              onClick={() => setSelectedRegion(null)} 
+              className="flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-indigo-100 text-indigo-600 rounded-lg text-[10px] font-bold border border-indigo-200 transition-all cursor-pointer shadow-sm active:scale-95"
+            >
+              <X className="w-3 h-3 text-indigo-500" /> Clear Filter
+            </button>
+          </div>
+        </FadeUp>
+      )}
 
       {/* ═══════════════════════════════════════════════════════
           SECTION 2 — Platform Health Summary (4 cards only)
@@ -309,12 +361,29 @@ export default function OwnerOverview() {
       ═══════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
         {/* ── Section 4: Global India Map ───────────────────── */}
-        <FadeUp delay={0.1} >
+        {/* ── Section 4: Global India Map ───────────────────── */}
+        <FadeUp delay={0.1} className="xl:col-span-2">
           <div
-            className="xl:col-span-2 bg-white rounded-xl p-5 h-full"
+            className="bg-white rounded-xl p-5 h-full"
             style={{ border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
           >
-            <SectionLabel>Site Distribution — India</SectionLabel>
+            <div className="flex items-center justify-between mb-3">
+              <SectionLabel>Site Distribution — India</SectionLabel>
+              <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-lg text-[9px] font-bold">
+                <button
+                  onClick={() => setMapViewMode("sites")}
+                  className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${mapViewMode === "sites" ? "bg-white text-slate-800 shadow-xs" : "text-slate-500 hover:text-slate-800"}`}
+                >
+                  Sites
+                </button>
+                <button
+                  onClick={() => setMapViewMode("customers")}
+                  className={`px-1.5 py-0.5 rounded transition-all cursor-pointer ${mapViewMode === "customers" ? "bg-white text-slate-800 shadow-xs" : "text-slate-500 hover:text-slate-800"}`}
+                >
+                  Customers
+                </button>
+              </div>
+            </div>
             <div className="relative" style={{ height: 260 }}>
               {/* Simplified India SVG */}
               <svg viewBox="0 0 320 380" className="absolute inset-0 w-full h-full">
@@ -331,22 +400,122 @@ export default function OwnerOverview() {
                   { name: "South", cx: 168, cy: 280, sites: 1920, status: "healthy" },
                   { name: "East", cx: 220, cy: 145, sites: 980, status: "healthy" },
                   { name: "Central", cx: 160, cy: 195, sites: 542, status: "healthy" },
-                ].map((r) => (
-                  <g key={r.name}>
-                    <circle
-                      cx={r.cx} cy={r.cy}
-                      r={r.sites > 2000 ? 9 : r.sites > 1000 ? 7 : 5}
-                      fill={dot[r.status as keyof typeof dot]}
-                      fillOpacity={0.85}
-                      stroke="white"
-                      strokeWidth="1.5"
-                    />
-                    <text x={r.cx} y={r.cy + 20} textAnchor="middle" fontSize="9" fill="#64748B" fontWeight="600">
-                      {r.name}
-                    </text>
-                  </g>
-                ))}
+                ].map((r) => {
+                  const isSelected = selectedRegion === r.name;
+                  const isHovered = hoveredRegion === r.name;
+                  const regionCustCount = customers.filter(c => c.region === r.name).length;
+                  
+                  const dotRadius = mapViewMode === "sites" 
+                    ? (r.sites > 2000 ? 9 : r.sites > 1000 ? 7 : 5)
+                    : (regionCustCount > 2 ? 9 : regionCustCount > 1 ? 7 : 5);
+
+                  return (
+                    <g 
+                      key={r.name}
+                      className="cursor-pointer group select-none"
+                      onClick={() => setSelectedRegion(selectedRegion === r.name ? null : r.name)}
+                      onMouseEnter={() => setHoveredRegion(r.name)}
+                      onMouseLeave={() => setHoveredRegion(null)}
+                    >
+                      {(isSelected || isHovered) && (
+                        <circle
+                          cx={r.cx} cy={r.cy}
+                          r={dotRadius + 4}
+                          fill="none"
+                          stroke={isSelected ? "#6366F1" : dot[r.status as keyof typeof dot]}
+                          strokeWidth="1.5"
+                          strokeOpacity={isSelected ? 0.7 : 0.4}
+                          className={isSelected ? "animate-pulse" : ""}
+                          style={{ transformOrigin: `${r.cx}px ${r.cy}px` }}
+                        />
+                      )}
+                      <circle
+                        cx={r.cx} cy={r.cy}
+                        r={dotRadius}
+                        fill={isSelected ? "#6366F1" : dot[r.status as keyof typeof dot]}
+                        fillOpacity={0.85}
+                        stroke="white"
+                        strokeWidth="1.5"
+                        className="transition-all duration-300"
+                        style={{
+                          transform: isHovered || isSelected ? "scale(1.2)" : "scale(1)",
+                          transformOrigin: `${r.cx}px ${r.cy}px`
+                        }}
+                      />
+                      <text 
+                        x={r.cx} 
+                        y={r.cy + dotRadius + 11} 
+                        textAnchor="middle" 
+                        fontSize="9" 
+                        fill={isSelected ? "#4F46E5" : "#64748B"} 
+                        fontWeight={isSelected ? "700" : "600"}
+                      >
+                        {r.name}
+                      </text>
+                    </g>
+                  );
+                })}
               </svg>
+
+              {/* Hover Tooltip */}
+              <AnimatePresence>
+                {hoveredRegion && (() => {
+                  const regionData = [
+                    { name: "North", sites: 2840, status: "healthy" },
+                    { name: "West", sites: 2180, status: "warning" },
+                    { name: "South", sites: 1920, status: "healthy" },
+                    { name: "East", sites: 980, status: "healthy" },
+                    { name: "Central", sites: 542, status: "healthy" },
+                  ].find(x => x.name === hoveredRegion);
+                  
+                  if (!regionData) return null;
+                  
+                  const regCustomers = customers.filter(c => c.region === hoveredRegion || c.region === "National");
+                  const regIncidents = incidents.filter(inc => getRegionForIncident(inc) === hoveredRegion);
+                  
+                  const coords = {
+                    North: { x: 155, y: 95 },
+                    West: { x: 110, y: 180 },
+                    South: { x: 168, y: 280 },
+                    East: { x: 220, y: 145 },
+                    Central: { x: 160, y: 195 }
+                  }[hoveredRegion as keyof typeof coords] || { x: 160, y: 195 };
+
+                  return (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 5 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute bg-slate-900/95 backdrop-blur-md text-white p-3 rounded-xl shadow-xl z-20 border border-slate-700 pointer-events-none w-48 text-[11px]"
+                      style={{
+                        left: `${(coords.x / 320) * 100}%`,
+                        top: `${(coords.y / 380) * 100}%`,
+                        transform: "translate(-50%, -115%)",
+                      }}
+                    >
+                      <div className="font-bold text-xs mb-1.5 flex items-center justify-between border-b border-slate-700 pb-1">
+                        <span>{hoveredRegion} Region</span>
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ background: dot[regionData.status as keyof typeof dot] }} />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-slate-300">
+                          <span>Customers:</span>
+                          <span className="font-semibold text-white">{regCustomers.length}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-300">
+                          <span>Total Sites:</span>
+                          <span className="font-semibold text-white">{regionData.sites.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between text-slate-300">
+                          <span>Critical Incidents:</span>
+                          <span className="font-semibold text-red-400">{regIncidents.filter(i => i.severity === "critical").length}</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })()}
+              </AnimatePresence>
             </div>
 
             {/* Legend */}
@@ -365,9 +534,9 @@ export default function OwnerOverview() {
         </FadeUp>
 
         {/* ── Section 5: Active Incidents ───────────────────── */}
-        <FadeUp delay={0.12}>
+        <FadeUp delay={0.12} className="xl:col-span-3">
           <div
-            className="xl:col-span-3 bg-white rounded-xl overflow-hidden"
+            className="bg-white rounded-xl overflow-hidden h-full"
             style={{ border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
@@ -390,7 +559,7 @@ export default function OwnerOverview() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
-                {incidents.map((inc) => {
+                {filteredIncidents.map((inc) => {
                   const sc = sevConfig[inc.severity as keyof typeof sevConfig];
                   const st = statusBadge[inc.status];
                   return (
@@ -535,9 +704,9 @@ export default function OwnerOverview() {
       ═══════════════════════════════════════════════════════ */}
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
         {/* ── Section 8: AI Executive Summary ──────────────── */}
-        <FadeUp delay={0.18}>
+        <FadeUp delay={0.18} className="xl:col-span-2">
           <div
-            className="xl:col-span-2 bg-white rounded-xl p-5 h-full"
+            className="bg-white rounded-xl p-5 h-full"
             style={{ border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
           >
             <div className="flex items-center justify-between mb-4">
@@ -568,9 +737,9 @@ export default function OwnerOverview() {
         </FadeUp>
 
         {/* ── Section 9: Revenue Snapshot ───────────────────── */}
-        <FadeUp delay={0.20}>
+        <FadeUp delay={0.20} className="xl:col-span-3">
           <div
-            className="xl:col-span-3 bg-white rounded-xl p-5 h-full"
+            className="bg-white rounded-xl p-5 h-full"
             style={{ border: "1px solid #E2E8F0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
           >
             <div className="flex items-center justify-between mb-1">
