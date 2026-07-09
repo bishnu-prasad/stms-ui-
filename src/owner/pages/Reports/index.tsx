@@ -53,6 +53,8 @@ const reportTemplates: Record<Tab, Array<{ name: string; desc: string; lastGener
 
 export default function OwnerReports() {
   const [activeTab, setActiveTab] = useState<Tab>("executive");
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isCustomModalOpen, setIsCustomModalOpen] = useState(false);
 
   return (
     <div className="space-y-5 pb-6">
@@ -62,10 +64,18 @@ export default function OwnerReports() {
           <p className="text-sm text-slate-500 mt-0.5">Generate, schedule and download platform reports</p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 cursor-pointer transition-colors" style={{ border: "1px solid #E2E8F0", background: "#fff" }}>
+          <button
+            onClick={() => setIsScheduleModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 cursor-pointer transition-colors"
+            style={{ border: "1px solid #E2E8F0", background: "#fff" }}
+          >
             <Calendar className="w-3.5 h-3.5" /> Schedule Report
           </button>
-          <button className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold text-white cursor-pointer" style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}>
+          <button
+            onClick={() => setIsCustomModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold text-white cursor-pointer"
+            style={{ background: "linear-gradient(135deg, #6366F1, #8B5CF6)" }}
+          >
             <FileText className="w-3.5 h-3.5" /> Custom Report
           </button>
         </div>
@@ -121,6 +131,7 @@ export default function OwnerReports() {
 
         {/* Generate New Report Card */}
         <div
+          onClick={() => setIsCustomModalOpen(true)}
           className="bg-white rounded-2xl p-5 border-2 border-dashed flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-indigo-300 hover:bg-indigo-50/30 transition-all"
           style={{ borderColor: "#E2E8F0" }}
         >
@@ -133,6 +144,217 @@ export default function OwnerReports() {
           </div>
         </div>
       </div>
+
+      {/* ==================================================================== */}
+      {/* MODAL DIALOG: SCHEDULE REPORT (PREMIUM)                              */}
+      {/* ==================================================================== */}
+      {isScheduleModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="bg-white border border-slate-205 rounded-2xl p-6 shadow-xl w-full max-w-lg text-left">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+              <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-indigo-650" /> Schedule Recurring Report
+              </h3>
+              <button
+                onClick={() => setIsScheduleModalOpen(false)}
+                className="p-1.5 text-slate-450 hover:text-slate-700 hover:bg-slate-50 rounded-lg cursor-pointer font-bold border-none bg-transparent"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); setIsScheduleModalOpen(false); }} className="space-y-4 text-xs font-semibold text-slate-650">
+              <div>
+                <label className="block text-slate-700 font-bold mb-1.5">Report Template</label>
+                <select className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500">
+                  <option>Platform Executive Summary</option>
+                  <option>Monthly Business Review</option>
+                  <option>Customer Health Dashboard</option>
+                  <option>Revenue & Billing Summary</option>
+                  <option>Platform Operations Report</option>
+                  <option>Energy Consumption Report</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1.5">Frequency</label>
+                  <select className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500">
+                    <option>Daily at 08:00 AM</option>
+                    <option>Weekly (Mondays)</option>
+                    <option>Monthly (1st of Month)</option>
+                    <option>Quarterly (End of Quarter)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1.5">File Format</label>
+                  <select className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500">
+                    <option>PDF Document</option>
+                    <option>Excel Spreadsheet</option>
+                    <option>CSV Raw Data</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1.5">Recipient Emails</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. ops@stms.com, ceo@stms.com"
+                  className="w-full h-9 rounded-lg border border-slate-200 px-3 text-xs text-slate-800 focus:ring-2 focus:ring-blue-550"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-slate-700 font-bold mb-1">Delivery Channels</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-600">
+                    <input type="checkbox" defaultChecked className="w-4 h-4 accent-indigo-600" />
+                    Email Attachment
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-600">
+                    <input type="checkbox" className="w-4 h-4 accent-indigo-600" />
+                    Slack Integration
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer font-medium text-slate-600">
+                    <input type="checkbox" className="w-4 h-4 accent-indigo-600" />
+                    WhatsApp Summary
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsScheduleModalOpen(false)}
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg text-xs font-bold transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
+                >
+                  Schedule Report
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ==================================================================== */}
+      {/* MODAL DIALOG: CUSTOM REPORT (PREMIUM)                                */}
+      {/* ==================================================================== */}
+      {isCustomModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="bg-white border border-slate-205 rounded-2xl p-6 shadow-xl w-full max-w-lg text-left">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+              <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-indigo-650" /> Custom Report Builder
+              </h3>
+              <button
+                onClick={() => setIsCustomModalOpen(false)}
+                className="p-1.5 text-slate-450 hover:text-slate-700 hover:bg-slate-50 rounded-lg cursor-pointer font-bold border-none bg-transparent"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); setIsCustomModalOpen(false); }} className="space-y-4 text-xs font-semibold text-slate-650">
+              <div>
+                <label className="block text-slate-700 font-bold mb-1.5">Report Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Q2 Region-wise SLA Compliance"
+                  className="w-full h-9 rounded-lg border border-slate-200 px-3 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1.5">Start Date</label>
+                  <input
+                    type="date"
+                    required
+                    className="w-full h-9 rounded-lg border border-slate-200 px-3 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1.5">End Date</label>
+                  <input
+                    type="date"
+                    required
+                    className="w-full h-9 rounded-lg border border-slate-200 px-3 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1.5">Filter by Region</label>
+                  <select className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-550">
+                    <option>All Regions</option>
+                    <option>North</option>
+                    <option>West</option>
+                    <option>South</option>
+                    <option>East</option>
+                    <option>Central</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1.5">Export Format</label>
+                  <select className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2.5 text-xs text-slate-800 focus:ring-2 focus:ring-blue-500">
+                    <option>PDF Document (.pdf)</option>
+                    <option>Excel Spreadsheet (.xlsx)</option>
+                    <option>CSV Raw Sheet (.csv)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-2">Metrics & Scope to Include</label>
+                <div className="grid grid-cols-2 gap-2 text-slate-650 font-medium">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" defaultChecked className="w-4 h-4 accent-indigo-600" />
+                    Uptime SLA Targets
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" defaultChecked className="w-4 h-4 accent-indigo-600" />
+                    Revenue Breakdown
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" className="w-4 h-4 accent-indigo-600" />
+                    Active Alarm History
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" className="w-4 h-4 accent-indigo-600" />
+                    Carbon Emission green data
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsCustomModalOpen(false)}
+                  className="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg text-xs font-bold transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all cursor-pointer"
+                >
+                  Generate Report
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -220,11 +220,358 @@ function CustomerDetail({ c, onClose }: { c: Customer; onClose: () => void }) {
               </div>
             </div>
           )}
-          {activeTab !== "overview" && (
-            <div className="flex flex-col items-center justify-center h-48 text-slate-400">
-              <div className="text-4xl mb-3">🚧</div>
-              <div className="text-sm font-semibold capitalize">{activeTab} tab content</div>
-              <div className="text-xs mt-1">Coming soon in next iteration</div>
+          {/* Sites Tab */}
+          {activeTab === "sites" && (
+            <div className="space-y-4 text-left">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Assigned Network Sites</h4>
+                <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-bold">{c.sites} Total Sites</span>
+              </div>
+              <div className="border border-slate-100 rounded-xl overflow-hidden bg-white">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-[9px] tracking-wider border-b border-slate-100">
+                    <tr>
+                      <th className="px-4 py-2.5">Site Name / ID</th>
+                      <th className="px-4 py-2.5">Region</th>
+                      <th className="px-4 py-2.5">Uptime</th>
+                      <th className="px-4 py-2.5 text-center">Devices</th>
+                      <th className="px-4 py-2.5 text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50 text-slate-700 font-medium">
+                    {[
+                      { id: "STMS-IND-081", name: "Mumbai South Edge", region: "West", uptime: "99.98%", devices: 8, status: "Online" },
+                      { id: "STMS-IND-129", name: "Delhi Connaught Hub", region: "North", uptime: "99.50%", devices: 12, status: "Online" },
+                      { id: "STMS-IND-341", name: "Chennai Main Port", region: "South", uptime: "98.12%", devices: 6, status: "Warning" },
+                      { id: "STMS-IND-902", name: "Kolkata Saltlake", region: "East", uptime: "0.00%", devices: 8, status: "Offline" },
+                    ].map((site) => (
+                      <tr key={site.id} className="hover:bg-slate-50/50">
+                        <td className="px-4 py-3">
+                          <span className="block font-bold text-slate-900">{site.name}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">{site.id}</span>
+                        </td>
+                        <td className="px-4 py-3 text-slate-500">{site.region}</td>
+                        <td className="px-4 py-3 font-mono font-bold text-slate-800">{site.uptime}</td>
+                        <td className="px-4 py-3 text-center font-mono">{site.devices}</td>
+                        <td className="px-4 py-3 text-right">
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                            site.status === "Online" ? "bg-emerald-50 text-emerald-700" :
+                            site.status === "Warning" ? "bg-amber-50 text-amber-700" : "bg-rose-50 text-rose-700"
+                          }`}>
+                            {site.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Users Tab */}
+          {activeTab === "users" && (
+            <div className="space-y-4 text-left">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Customer Directory Portal</h4>
+                <span className="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold">{c.users} Registered Users</span>
+              </div>
+              <div className="border border-slate-100 rounded-xl overflow-hidden bg-white">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-[9px] tracking-wider border-b border-slate-100">
+                    <tr>
+                      <th className="px-4 py-2.5">User</th>
+                      <th className="px-4 py-2.5">Role</th>
+                      <th className="px-4 py-2.5">Last Active</th>
+                      <th className="px-4 py-2.5 text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50 text-slate-700 font-medium">
+                    {[
+                      { name: "Ankush Deshmukh", email: "ankushd919@gmail.com", role: "Administrator", active: "10m ago", status: "Active" },
+                      { name: "Gaurav Jadhav", email: "gaurav@indionetworks.com", role: "Operator", active: "2 hours ago", status: "Active" },
+                      { name: "Sohail Ahmed", email: "sohail@indionetworks.com", role: "Viewer", active: "3 days ago", status: "Active" },
+                    ].map((user) => (
+                      <tr key={user.email} className="hover:bg-slate-50/50">
+                        <td className="px-4 py-3">
+                          <span className="block font-bold text-slate-900">{user.name}</span>
+                          <span className="text-[10px] text-slate-400 font-mono">{user.email}</span>
+                        </td>
+                        <td className="px-4 py-3 text-slate-500 font-semibold">{user.role}</td>
+                        <td className="px-4 py-3 text-slate-400 font-mono">{user.active}</td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700">
+                            {user.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Revenue Tab */}
+          {activeTab === "revenue" && (
+            <div className="space-y-5 text-left">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-left">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">MRR</span>
+                  <span className="block text-lg font-black text-slate-800 mt-1">₹{(c.mrr / 100000).toFixed(1)} Lakhs</span>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-left">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">ARR</span>
+                  <span className="block text-lg font-black text-slate-800 mt-1">₹{(c.arr / 10000000).toFixed(2)} Crores</span>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-left">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Outstanding</span>
+                  <span className={`block text-lg font-black mt-1 ${c.invoiceDue > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                    ₹{(c.invoiceDue / 100000).toFixed(2)} Lakhs
+                  </span>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide text-left">Transaction & Payment Logs</h4>
+                <div className="border border-slate-100 rounded-xl overflow-hidden bg-white">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-[9px] tracking-wider border-b border-slate-100">
+                      <tr>
+                        <th className="px-4 py-2.5">Billing ID</th>
+                        <th className="px-4 py-2.5">Date</th>
+                        <th className="px-4 py-2.5">Amount</th>
+                        <th className="px-4 py-2.5">Method</th>
+                        <th className="px-4 py-2.5 text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50 text-slate-700 font-medium">
+                      {[
+                        { id: "TXN-890214", date: "2026-06-01", amount: `₹${(c.mrr / 100000).toFixed(1)}L`, method: "Bank Transfer", status: "Success" },
+                        { id: "TXN-723145", date: "2026-05-01", amount: `₹${(c.mrr / 100000).toFixed(1)}L`, method: "UPI Auto", status: "Success" },
+                        { id: "TXN-590123", date: "2026-04-01", amount: `₹${(c.mrr / 100000).toFixed(1)}L`, method: "Bank Transfer", status: "Success" },
+                      ].map((txn) => (
+                        <tr key={txn.id} className="hover:bg-slate-50/50">
+                          <td className="px-4 py-3 font-mono font-bold text-slate-800">{txn.id}</td>
+                          <td className="px-4 py-3 text-slate-400 font-mono">{txn.date}</td>
+                          <td className="px-4 py-3 font-bold text-slate-850">{txn.amount}</td>
+                          <td className="px-4 py-3 text-slate-500">{txn.method}</td>
+                          <td className="px-4 py-3 text-right">
+                            <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700">
+                              {txn.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Subscription Tab */}
+          {activeTab === "subscription" && (
+            <div className="space-y-5 text-left text-xs">
+              <div className="p-4 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider">Current Account Tier</span>
+                  <h4 className="text-lg font-black text-slate-900 mt-0.5">{c.plan}</h4>
+                  <p className="text-[11px] text-slate-400 mt-1">Renewal Cycle: Annual Renewal on {c.renewalDate}</p>
+                </div>
+                <span className="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  Active Contract
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="border border-slate-100 p-4 rounded-xl bg-white space-y-3">
+                  <h5 className="font-bold text-slate-800 uppercase text-[10px] tracking-wide border-b border-slate-100 pb-1.5">
+                    Plan Features & Entitlements
+                  </h5>
+                  <ul className="space-y-2 text-slate-600 font-medium text-[11px]">
+                    <li className="flex items-center gap-2">✓ Live Uptime Analytics & SLAs</li>
+                    <li className="flex items-center gap-2">✓ Critical Alarm SMS & WhatsApp Broadcast</li>
+                    <li className="flex items-center gap-2">✓ Maximum {c.sites * 2} Active Devices</li>
+                    <li className="flex items-center gap-2">✓ 24/7 Premium NOC Hotline Support</li>
+                  </ul>
+                </div>
+
+                <div className="border border-slate-100 p-4 rounded-xl bg-white flex flex-col justify-between">
+                  <div>
+                    <h5 className="font-bold text-slate-800 uppercase text-[10px] tracking-wide border-b border-slate-100 pb-1.5">
+                      Subscription Lifecycle
+                    </h5>
+                    <div className="space-y-2 pt-2 text-[11px]">
+                      <div className="flex justify-between"><span className="text-slate-400">Join Date</span><span className="font-semibold text-slate-700">{c.joinDate}</span></div>
+                      <div className="flex justify-between"><span className="text-slate-400">Renewal Price</span><span className="font-semibold text-slate-700">₹{(c.arr / 10000000).toFixed(2)}Cr / yr</span></div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 pt-4">
+                    <button className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all cursor-pointer">
+                      Modify License
+                    </button>
+                    <button className="px-3 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-lg text-xs font-bold transition-all cursor-pointer">
+                      Pause
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Invoices Tab */}
+          {activeTab === "invoices" && (
+            <div className="space-y-4 text-left">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Historical Invoices</h4>
+                {c.invoiceDue > 0 && (
+                  <span className="text-[10px] bg-red-50 text-red-700 px-2 py-0.5 rounded font-bold border border-red-200">
+                    Due: ₹{(c.invoiceDue / 100000).toFixed(2)}L
+                  </span>
+                )}
+              </div>
+              <div className="border border-slate-100 rounded-xl overflow-hidden bg-white">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-[9px] tracking-wider border-b border-slate-100">
+                    <tr>
+                      <th className="px-4 py-2.5">Invoice ID</th>
+                      <th className="px-4 py-2.5">Billing Period</th>
+                      <th className="px-4 py-2.5">Amount</th>
+                      <th className="px-4 py-2.5 text-center">Status</th>
+                      <th className="px-4 py-2.5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50 text-slate-700 font-medium">
+                    {[
+                      { id: "INV-2026-003", period: "June 2026", amount: `₹${(c.mrr / 100000).toFixed(1)}L`, status: c.invoiceDue > 0 ? "Unpaid" : "Paid" },
+                      { id: "INV-2026-002", period: "May 2026", amount: `₹${(c.mrr / 100000).toFixed(1)}L`, status: "Paid" },
+                      { id: "INV-2026-001", period: "April 2026", amount: `₹${(c.mrr / 100000).toFixed(1)}L`, status: "Paid" },
+                    ].map((inv) => (
+                      <tr key={inv.id} className="hover:bg-slate-50/50">
+                        <td className="px-4 py-3 font-mono font-bold text-slate-800">{inv.id}</td>
+                        <td className="px-4 py-3 text-slate-400 font-mono">{inv.period}</td>
+                        <td className="px-4 py-3 font-bold text-slate-850">{inv.amount}</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
+                            inv.status === "Paid" ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700 animate-pulse"
+                          }`}>
+                            {inv.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button className="text-[10px] text-blue-600 hover:text-blue-800 font-bold cursor-pointer">
+                            Download PDF
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Alarms Tab */}
+          {activeTab === "alarms" && (
+            <div className="space-y-4 text-left">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Active Telecom Alarms</h4>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold uppercase">Critical: {c.alarms.critical}</span>
+                  <span className="text-[9px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded font-bold uppercase">Major: {c.alarms.major}</span>
+                </div>
+              </div>
+              <div className="border border-slate-100 rounded-xl overflow-hidden bg-white">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-[9px] tracking-wider border-b border-slate-100">
+                    <tr>
+                      <th className="px-4 py-2.5">Alarm Code</th>
+                      <th className="px-4 py-2.5">Affected Site</th>
+                      <th className="px-4 py-2.5">Severity</th>
+                      <th className="px-4 py-2.5">Triggered Time</th>
+                      <th className="px-4 py-2.5 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50 text-slate-700 font-medium">
+                    {c.alarms.critical > 0 || c.alarms.major > 0 ? (
+                      <>
+                        <tr className="hover:bg-slate-50/50">
+                          <td className="px-4 py-3 font-mono font-bold text-red-600">ALM-DG-FAIL</td>
+                          <td className="px-4 py-3">Mumbai South Edge (STMS-IND-081)</td>
+                          <td className="px-4 py-3 text-red-600 uppercase font-black font-mono">Critical</td>
+                          <td className="px-4 py-3 text-slate-400 font-mono">20m ago</td>
+                          <td className="px-4 py-3 text-right">
+                            <button className="text-[10px] text-indigo-600 hover:text-indigo-850 font-bold cursor-pointer">Triage</button>
+                          </td>
+                        </tr>
+                        <tr className="hover:bg-slate-50/50">
+                          <td className="px-4 py-3 font-mono font-bold text-amber-600">ALM-VOLT-LOW</td>
+                          <td className="px-4 py-3">Chennai Main Port (STMS-IND-341)</td>
+                          <td className="px-4 py-3 text-amber-600 uppercase font-bold font-mono">Major</td>
+                          <td className="px-4 py-3 text-slate-400 font-mono">1 hour ago</td>
+                          <td className="px-4 py-3 text-right">
+                            <button className="text-[10px] text-indigo-600 hover:text-indigo-850 font-bold cursor-pointer">Triage</button>
+                          </td>
+                        </tr>
+                      </>
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-6 text-center text-slate-400 font-bold">
+                          🎉 No active critical or major alarms on this account.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Settings Tab */}
+          {activeTab === "settings" && (
+            <div className="space-y-5 text-left text-xs font-semibold text-slate-700">
+              <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide border-b border-slate-100 pb-1.5">
+                Customer Account Controls
+              </h4>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/50">
+                  <div>
+                    <span className="block font-bold text-slate-900">SLA Warning Alerts</span>
+                    <span className="text-[10px] text-slate-400 font-normal">Push notification to email when uptime drops below threshold</span>
+                  </div>
+                  <input type="checkbox" defaultChecked className="w-8 h-4 bg-slate-200 checked:bg-indigo-600 rounded-full cursor-pointer" />
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/50">
+                  <div>
+                    <span className="block font-bold text-slate-900">Auto Invoice Settlement</span>
+                    <span className="text-[10px] text-slate-400 font-normal">Automatically debit circle accounts for monthly MRR recurring fees</span>
+                  </div>
+                  <input type="checkbox" defaultChecked className="w-8 h-4 bg-slate-200 checked:bg-indigo-600 rounded-full cursor-pointer" />
+                </div>
+
+                <div className="flex items-center justify-between p-3 rounded-xl border border-slate-100 bg-slate-50/50">
+                  <div>
+                    <span className="block font-bold text-slate-900">Uptime Threshold Target</span>
+                    <span className="text-[10px] text-slate-400 font-normal">Target service agreement percentage SLA</span>
+                  </div>
+                  <select className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs focus:ring-2 focus:ring-blue-500 text-slate-800">
+                    <option value="99.9">99.9% Uptime SLA</option>
+                    <option value="99.5">99.5% Uptime SLA</option>
+                    <option value="99.0">99.0% Uptime SLA</option>
+                  </select>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                  <div>
+                    <span className="block font-bold text-rose-650">Restrict Account Actions</span>
+                    <span className="text-[10px] text-slate-450 font-normal">Temporarily suspend all client logins & data telemetry streams</span>
+                  </div>
+                  <button className="px-4 py-2 border border-rose-200 hover:bg-rose-50 text-rose-600 rounded-lg text-xs font-bold transition-all cursor-pointer">
+                    Suspend Organization
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
